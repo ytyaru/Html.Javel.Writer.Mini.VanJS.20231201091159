@@ -1,0 +1,98 @@
+<style>
+:root { --inline-size:1920px; --block-size:1080px; --overflow-x:hidden; --overflow-y:hidden; }
+:root { --inline-size:1920px; --block-size:1080px; --overflow-x:hidden; --overflow-y:hidden; }
+body {
+    /*
+    inline-size:var(--inline-size);
+    block-size:var(--block-size);
+    overflow-x:var(--overflow-x);
+    overflow-y:var(--overflow-y);
+    */
+    /*grid-template-rows: 1fr 16px 1fr;*/ /* block-size px */
+    /*block-size:var(--block-size);*/
+    overflow-x:hidden;
+    overflow-y:hidden;
+    padding:0;margin:0;
+}
+</style>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/vanjs-org/van/public/van-1.2.6.nomodule.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const { div, span, h1, p, br, textarea, button } = van.tags
+    const blockSize = van.state(document.documentElement.clientHeight)
+    const inlineSize = van.state(document.documentElement.clientWidth)
+    const menuBlockSize = van.state(32)
+    const viewerBlockSize = van.state((blockSize.val - menuBlockSize.val) / 2)
+    const viewerOverflowX = van.state('hidden')
+    const viewerOverflowY = van.state('auto')
+    //const viewerBlockSize = van.state(document.documentElement.clientHeight / 2)
+//    document.querySelector(':root').style.setProperty('--inline-size', `${inlineSize.val}px`)
+    document.querySelector(':root').style.setProperty('--block-size', `${blockSize.val}px`)
+    document.querySelector(':root').style.setProperty('--inline-size', `${inlineSize.val}px`)
+    const text = van.state('# 原稿\n\n　これは原稿です。自由に書いてください。')
+    function makeBlocks(lines) {
+        const [blocks, block] = [[], []]
+        for (let line of lines) {
+            block.push(line)
+            //if (''===line && 0 < block.length) { blocks.push(block.join('\n').trim()); block.splice(0); }
+            if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
+            //if (''===line && 0 < block.length) { blocks.push(block.join('\n').replace(/\r?\n/g,'')); block.splice(0); }
+        }
+        //if (0 < block.length) { blocks.push(block.join('\n').trim()) }
+        if (0 < block.length) { blocks.push(block.join('\n')) }
+        //if (0 < block.length) { blocks.push(block.join('\n').replace(/\r?\n/g,'')); block.splice(0); }
+        return blocks.filter(v=>v)
+    }
+    const htmls = van.derive(()=>{
+        console.log('derive() htmls')
+        const lines = text.val.trim().split(/\r?\n/)
+        const blocks = makeBlocks(lines)
+        return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).map(line=>[span(line), br()]).flat().slice(0, -1)))
+        //return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).map(line=>[span(line), br()])))
+    })
+    console.log('htmls.val:',htmls.val)
+    const writingMode = van.state('horizontal-tb')
+    van.add(document.body, div({id:'viewer', style:()=>`display:grid;grid-template-columns:${inlineSize.val-1}px;grid-template-rows:${viewerBlockSize.val}px ${menuBlockSize.val}px ${viewerBlockSize.val}px;inline-size:${inlineSize.val};block-size:${blockSize.val};`}, 
+    //van.add(document.body, div({id:'viewer', style:()=>`display:grid;grid-template-columns:${inlineSize.val-1}px;grid-template-rows:${viewerBlockSize.val}px ${menuBlockSize.val}px ${viewerBlockSize.val}px;inline-size:${inlineSize.val};block-size:${blockSize.val};overflow-wrap:anywhere;overflow-x:${viewerOverflowX.val};overflow-y:${viewerOverflowY.val};`}, 
+        textarea({id:'manuscript', placeholder:'原稿', style:()=>`box-sizing:border-box;inline-size:100%;block-size:100%;`,
+        //textarea({id:'manuscript', placeholder:'原稿', style:()=>`box-sizing:border-box;inline-size:${inlineSize.val}px;block-size:${viewerBlockSize.val}px;`,
+            oninput:(e)=>text.val = e.target.value},
+            text.val),
+        button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
+            onclick:()=>{
+                writingMode.val= (('horizontal-tb'===writingMode.val) ? 'vertical-rl' : 'horizontal-tb')
+                const isVertical = ('horizontal-tb'===writingMode.val) ? false : true
+                viewerOverflowX.val = (isVertical) ? 'scroll' : 'hidden'
+                viewerOverflowY.val = (isVertical) ? 'hidden' : 'scroll'
+//                viewerOverflowX.val = (isVertical) ? 'auto' : 'hidden'
+//                viewerOverflowY.val = (isVertical) ? 'hidden' : 'auto'
+
+
+//                document.querySelector(':root').style.setProperty('--overflow-x', (isVertical) ? 'scroll' : 'hidden')
+//                document.querySelector(':root').style.setProperty('--overflow-y', (isVertical) ? 'hidden' : 'scroll')
+
+//                const w = document.documentElement.clientWidth
+//                const h = document.documentElement.clientHeight
+//                blockSize.val = (('horizontal-tb'===writingMode.val) ? h : w)
+//                inlineSize.val = (('horizontal-tb'===writingMode.val) ? w : h)
+//                viewerBlockSize.val = blockSize.val - ['manuscript', 'writing-mode'].reduce((sum,id)=>sum + parseInt(document.getElementById(id).style.blockSize))
+
+            }},
+            ()=>(('horizontal-tb'===writingMode.val) ? '横' : '縦')
+        ),
+        div({id:'html-viewer', style:()=>`writing-mode:${writingMode.val};box-sizing:border-box;overflow-x:${viewerOverflowX.val};overflow-y:${viewerOverflowY.val};`,
+            onwheel:(e)=>{
+                if ('vertical-rl'===writingMode.val) {
+                    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+                    const target = document.querySelector('#html-viewer')
+                    target.scrollLeft += e.deltaY;
+                    e.preventDefault();
+                }
+            }}, 
+            ()=>div(htmls.val))
+        //div({id:'viewr', style:()=>`writing-mode:${writingMode.val};box-sizing:border-box;overflow-x:${viewerOverflowX.val};overflow-y:${viewerOverflowY.val};`}, ()=>div(htmls.val))
+        //div({id:'viewr', style:()=>`writing-mode:${writingMode.val};box-sizing:border-box;inline-size:${inlineSize.val}px;block-size:${viewerBlockSize.val}px;`}, ()=>div(htmls.val))
+        //div({id:'viewr', style:()=>`writing-mode:${writingMode.val};box-sizing:border-box;inline-size:100%;block-size:${viewerBlockSize.val};`}, ()=>div(htmls.val))
+    ))
+})
+</script>

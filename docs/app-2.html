@@ -1,0 +1,137 @@
+<style>
+:root { --font-size:max(16px, calc(100vw / 42)); --font-family-serif:}
+body {
+    overflow-x:hidden;
+    overflow-y:hidden;
+    padding:0;margin:0;
+    width:100%;
+    height:100%;
+}
+body, textarea {
+    /* https://willcloud.jp/knowhow/font-family/ */
+    /* [Noto(Google)|源ノSource Han(Apple)]  [Sans(ゴシック)|Serif(明朝)] 源ノ[ゴシック|明朝] */
+    font-family: 'Noto Serif JP', 'Source Han Serif JP', 'Noto Color Emoji', serif; 
+    font-size: var(--font-size);
+    line-height: 1.7em;
+    letter-spacing: 0.05em;
+}
+h1 { font-family: 'Noto Sans JP', 'Source Han Sans JP', 'Noto Color Emoji', sans-serif; }
+</style>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/vanjs-org/van/public/van-1.2.6.nomodule.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const { div, span, h1, p, br, textarea, button } = van.tags
+    const screenWidth = van.state(document.documentElement.clientWidth)
+    const screenHeight = van.state(document.documentElement.clientHeight)
+    const blockSize = van.state(document.documentElement.clientHeight)
+    const inlineSize = van.state(document.documentElement.clientWidth)
+    const menuBlockSize = van.state(32)
+    //const screenHeight = van.state((blockSize.val - menuBlockSize.val) / 2)
+    //const screenHeight = van.derive(()=>((blockSize.val - menuBlockSize.val) / 2))
+    //const uiHeight = van.state((blockSize.val - menuBlockSize.val) / 2)
+    //const uiHeight = van.derive(()=>((blockSize.val - menuBlockSize.val) / 2))
+    const uiWidth = van.derive(()=>screenWidth.val)
+    const uiHeight = van.derive(()=>((screenHeight.val - menuBlockSize.val) / 2))
+    const viewerInlineSize = van.state(inlineSize.val)
+    //const viewerBlockSize = van.state(screenHeight.val)
+    const viewerBlockSize = van.state(uiHeight.val)
+    const viewerOverflowX = van.state('hidden')
+    const viewerOverflowY = van.state('auto')
+    const viewerTextOrientation = van.state('mixed')
+    const viewerFontSize = van.state(16)
+    //const isVertical = ()=>('horizontal-tb'===writingMode.val) ? false : true
+    function resize(W=0, H=0) {
+        console.log('resize()')
+        if (0===W) { W = document.documentElement.clientWidth }
+        if (0===H) { H = document.documentElement.clientHeight }
+        screenWidth.val = document.documentElement.clientWidth
+        screenHeight.val = document.documentElement.clientHeight
+        const isVertical = ('horizontal-tb'===writingMode.val) ? false : true
+        //const [W, H] = [document.documentElement.clientWidth, document.documentElement.clientHeight]
+        viewerOverflowX.val = (isVertical) ? 'scroll' : 'hidden'
+        viewerOverflowY.val = (isVertical) ? 'hidden' : 'scroll'
+        viewerTextOrientation.val = (isVertical) ? 'upright' : 'mixed'
+        inlineSize.val = (isVertical) ? H : W
+        blockSize.val = (isVertical) ? W  : H
+        document.title = `${inlineSize.val}x${blockSize.val} ${uiHeight.val}`
+        console.log(document.title)
+        //document.querySelector('#html-viewer').innerHTML = `${inlineSize.val}x${blockSize.val}`
+        //getComputedStyle(document.querySelector('#html-viewer')).getPropertyValue('inilne-size')
+        //getComputedStyle(document.querySelector('#html-viewer')).getPropertyValue('block-size')
+        //viewerInlineSize.val = ((isVertical) ?  : ) - 
+        //viewerBlockSize.val = (isVertical) ? 'scroll' : 'hidden'
+        //viewerFontSize.val = (isVertical) ? 'upright' : 'mixed'
+    }
+//    window.addEventListener('resize', async(event) => resize() )
+//    new ResizeObserver(entries=>{
+//        for (let entry of entries) { resize(entry.contentRect.width, entry.contentRect.height) }
+//    }).observe(document.doby);
+    new ResizeObserver(entries=>{
+        for (let entry of entries) { resize(entry.contentRect.width, entry.contentRect.height) }
+    }).observe(document.querySelector('body'));
+    /*
+    const observer = new ResizeObserver(entries=>{
+        for (let entry of entries) { resize(entry.contentRect.width, entry.contentRect.height) }
+    })
+    observer.observe(document.querySelector('body'));
+    */
+    document.querySelector(':root').style.setProperty('--block-size', `${blockSize.val}px`)
+    document.querySelector(':root').style.setProperty('--inline-size', `${inlineSize.val}px`)
+    const text = van.state('# 原稿\n\n　これは原稿です。自由に書いてください。\n\n　構文は３つです。見出し、パラグラフ、改行です。\n　見出しは行頭に#と半角スペースのあとに文字を書きます。\n　パラグラフは空行を挟みます。\n　改行は連続したテキスト間にひとつだけ改行を入れるとパラグラフ内で改行できます。\n\n　このテキストエリアに原稿を書くと、↓にHTMLとして表示されます。\n\n　↓のボタンを押すと横書き／縦書きを切替します。\n\n　HTML表示領域は長くなるとスクロールします。縦書きのときは横スクロールですが、マウスホイールでスクロールできます。')
+    function makeBlocks(lines) {
+        const [blocks, block] = [[], []]
+        for (let line of lines) {
+            block.push(line)
+            if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
+        }
+        if (0 < block.length) { blocks.push(block.join('\n')) }
+        return blocks.filter(v=>v)
+    }
+    const htmls = van.derive(()=>{
+        console.log('derive() htmls')
+        const lines = text.val.trim().split(/\r?\n/)
+        const blocks = makeBlocks(lines)
+        return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).map(line=>[span(line), br()]).flat().slice(0, -1)))
+    })
+    console.log('htmls.val:',htmls.val)
+    const writingMode = van.state('horizontal-tb')
+    van.add(document.body, div({id:'viewer', style:()=>`display:grid;grid-template-columns:${uiWidth.val-1}px;grid-template-rows:${uiHeight.val}px ${menuBlockSize.val}px ${uiHeight.val}px;inline-size:${inlineSize.val};block-size:${blockSize.val};`},
+        textarea({id:'manuscript', placeholder:'原稿', style:()=>`box-sizing:border-box;inline-size:100%;block-size:100%;`,
+            oninput:(e)=>text.val = e.target.value},
+            text.val),
+        button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
+            onclick:()=>{
+                writingMode.val= (('horizontal-tb'===writingMode.val) ? 'vertical-rl' : 'horizontal-tb')
+                resize()
+                /*
+                const isVertical = ('horizontal-tb'===writingMode.val) ? false : true
+                viewerOverflowX.val = (isVertical) ? 'scroll' : 'hidden'
+                viewerOverflowY.val = (isVertical) ? 'hidden' : 'scroll'
+                */
+                /*
+                inlineSize.val = (isVertical) ? document.documentElement.clientHeight : document.documentElement.clientWidth
+                blockSize.val = (isVertical) ? document.documentElement.clientWidth : document.documentElement.clientHeight
+                
+                getComputedStyle(document.querySelector('#html-viewer')).getPropertyValue('inilne-size')
+                getComputedStyle(document.querySelector('#html-viewer')).getPropertyValue('block-size')
+                viewerInlineSize.val = ((isVertical) ?  : ) - 
+                viewerBlockSize.val = (isVertical) ? 'scroll' : 'hidden'
+                viewerTextOrientation.val = (isVertical) ? 'upright' : 'mixed'
+                viewerFontSize.val = (isVertical) ? 'upright' : 'mixed'
+                */
+            }},
+            ()=>(('horizontal-tb'===writingMode.val) ? '横' : '縦')
+        ),
+        div({id:'html-viewer', style:()=>`writing-mode:${writingMode.val};text-orientation:${viewerTextOrientation.val};box-sizing:border-box;overflow-x:${viewerOverflowX.val};overflow-y:${viewerOverflowY.val};`,
+            onwheel:(e)=>{
+                if ('vertical-rl'===writingMode.val) {
+                    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+                    const target = document.querySelector('#html-viewer')
+                    target.scrollLeft += e.deltaY;
+                    e.preventDefault();
+                }
+            }}, 
+            ()=>div(htmls.val))
+    ))
+})
+</script>
