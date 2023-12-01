@@ -1,0 +1,20 @@
+<style>
+em {
+    font-style: normal;
+    text-emphasis: sesame #000;
+    -webkit-text-emphasis: sesame #000;
+}
+ruby em { text-emphasis-position: under right; }
+</style>
+
+<ul>
+<li><ruby>漢字<rt>かんじ</rt></ruby>
+<li><ruby>漢字<rp>（</rp><rt>かんじ</rt><rp>）</rp></ruby>
+<li>これは<ruby>漢字<rp>（</rp><rt>かんじ</rt><rp>）</rp></ruby>です
+<li>これは<em>強調</em>です
+<li>これは<em><ruby>漢字<rp>（</rp><rt>かんじ</rt><rp>）</rp></ruby></em>です
+<li>これは<ruby><em>漢字</em><rp>（</rp><rt>かんじ</rt><rp>）</rp></ruby>です
+</ul>
+
+<p>　ルビと傍点の両方あると、ルビが優先され、傍点は非表示になるようだ。</p>
+<p>　ルビは上、傍点は下に表示したかったが、CSSプロパティ<code>text-emphasis-position</code>が機能しなかった。</p>
