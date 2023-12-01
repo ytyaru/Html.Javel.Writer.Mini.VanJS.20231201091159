@@ -13,16 +13,18 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         '最小限（VanJS, Parse(h1,p), UI(Textarea, 書字方向ボタン, 縦ホイールで横スクロール)）',
         'font-family設定',
         'resize()対応',
-        /*
         '画面分割を長辺側で行うよう対応',
+        /*
         'フォントサイズ自動最適化（16px〜/字かつ20〜40字/行）',
         'エクスポート機能追加',
         'インポート機能追加(DnD)',
         */
     ]
-    const { h1, ul, li, a } = van.tags
-    van.add(document.body, h1('Javel.Writer.Mini.VanJS'),
-        ul(
+    const { h1, p, ol, li, a } = van.tags
+    van.add(document.body, 
+        h1('Javel.Writer.Mini.VanJS'),
+        p('テキストで縦書き小説を書くツールの仮作成。'),
+        ol({start:0},
             items.map((item, i)=>li(a({href:`app-${i}.html`}, item)))
         ),
     )

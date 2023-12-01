@@ -1,0 +1,33 @@
+<style>
+:root {
+    --writing-mode:vertical-rl;
+    --text-orientation:upright;
+}
+body, pre, textarea {
+    writing-mode:var(--writing-mode);
+    font-size:max(16px, calc(100vw / 45));
+    line-height:1.7em;
+    letter-spacing:0.05em;
+    text-orientation:var(--text-orientation);
+    padding:0; margin:0;
+}
+pre {
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+</style>
+
+<pre>preです。入力できません。
+
+改行をそのまま表示します。</pre>
+
+<textarea>textareaです。入力できます。
+
+縦書きで入力したいけどFirefoxでしか対応していません。</textarea>
+
+<pre contenteditable="true">contenteditableなpreです。
+
+様々な問題があります。
+<a href="https://note.com/eveningmoon_lab/n/n274ca1ed5b41">こちら</a>を参照。
+</pre>
+
