@@ -1,0 +1,184 @@
+<style>
+:root { --font-size:max(16px, calc(100vw / 42)); --font-family-serif:}
+body {
+    overflow-x:hidden;
+    overflow-y:hidden;
+    padding:0;margin:0;
+    width:100%;
+    height:100%;
+}
+body, textarea {
+    font-family: 'Noto Serif JP', 'Source Han Serif JP', 'Noto Color Emoji', serif; 
+    font-size: var(--font-size);
+    line-height: 1.7em;
+    letter-spacing: 0.05em;
+}
+button { user-select:none; }
+h1 { font-family: 'Noto Sans JP', 'Source Han Sans JP', 'Noto Color Emoji', sans-serif; }
+</style>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/vanjs-org/van/public/van-1.2.6.nomodule.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const { div, span, h1, p, br, textarea, button } = van.tags
+    const screenWidth = van.state(document.documentElement.clientWidth)
+    const screenHeight = van.state(document.documentElement.clientHeight)
+    const blockSize = van.state(document.documentElement.clientHeight)
+    const inlineSize = van.state(document.documentElement.clientWidth)
+    const longSize = van.derive(()=>(screenHeight.val <= screenWidth.val) ? screenWidth.val : screenHeight.val)
+    const shortSize = van.derive(()=>(screenHeight.val <= screenWidth.val) ? screenWidth.val : screenHeight.val)
+    const longDir = van.derive(()=>(screenHeight.val <= screenWidth.val) ? '横長' : '縦長')
+    const menuBlockSize = van.state(32)
+    const uiWidth = van.state(screenWidth.val)
+    const uiHeight = van.state(((screenHeight.val - menuBlockSize.val) / 2))
+    const gridTemplateColumns = van.state(`${uiWidth.val}px ${menuBlockSize.val}px ${uiWidth.val}px`)
+    const gridTemplateRows = van.state(`${uiHeight.val}px`)
+    const viewerInlineSize = van.state(inlineSize.val)
+    const viewerBlockSize = van.state(uiHeight.val)
+    const viewerOverflowX = van.state('hidden')
+    const viewerOverflowY = van.state('auto')
+    const viewerTextOrientation = van.state('mixed')
+    const viewerFontSize = van.state(16)
+
+    const focus = {} // https://github.com/ghosh/Micromodal/blob/master/lib/src/index.js
+    focus.FOCUSABLE_ELEMENTS  = [
+        'a[href]',
+        'area[href]',
+        'input:not([disabled]):not([type="hidden"]):not([aria-hidden])',
+        'select:not([disabled]):not([aria-hidden])',
+        'textarea:not([disabled]):not([aria-hidden])',
+        'button:not([disabled]):not([aria-hidden])',
+        'iframe',
+        'object',
+        'embed',
+        '[contenteditable]',
+        '[tabindex]:not([tabindex^="-"])',
+        '*.focusable'
+    ]
+    focus.getFocusableNodes = ()=>[...document.querySelectorAll(focus.FOCUSABLE_ELEMENTS)]
+    //focus.getFocusableNodes = function() { document.querySelectorAll(focus.FOCUSABLE_ELEMENTS) }
+    focus.setFocusToFirstNode = function() {
+    //focus.setFocusToFirstNode = ()=>{
+        const nodes = focus.getFocusableNodes()
+        if (nodes.length > 0) nodes[0].focus()
+    }
+    //focus.retainFocus = (e)=>{
+    focus.retainFocus = function(e){
+        console.log(`e.code:${e.code}`, e)
+        let nodes = focus.getFocusableNodes()
+        console.log(nodes)
+        if (nodes.length === 0) return
+        nodes = nodes.filter(node=>(node.offsetParent !== null))
+        // if disableFocus is true
+        if (!document.contains(document.activeElement)) { nodes[0].focus() }
+        else {
+            const focusedItemIndex = nodes.indexOf(document.activeElement)
+            if (e.shiftKey && focusedItemIndex === 0) {
+                nodes[nodes.length - 1].focus()
+                e.preventDefault()
+            }
+            if (!e.shiftKey && nodes.length > 0 && focusedItemIndex === nodes.length - 1) {
+                nodes[0].focus()
+                e.preventDefault()
+            }
+        }
+    }
+    console.log(focus)
+    console.log(focus.retainFocus)
+    window.addEventListener('keydown', async(e) => {
+        if ('Esc'===e.code) return
+        if ('Tab'===e.code) focus.retainFocus(e)
+        console.log('activeElement:', document.activeElement)
+    })
+    function resize(W=0, H=0) {
+        if (0===W) { W = document.documentElement.clientWidth }
+        if (0===H) { H = document.documentElement.clientHeight }
+        if (screenWidth.val !== document.documentElement.clientWidth) { screenWidth.val = document.documentElement.clientWidth }
+        if (screenHeight.val !== document.documentElement.clientHeight) { screenHeight.val = document.documentElement.clientHeight }
+        gridTemplate()
+        const isVertical = ('horizontal-tb'===writingMode.val) ? false : true
+        viewerOverflowX.val = (isVertical) ? 'scroll' : 'hidden'
+        viewerOverflowY.val = (isVertical) ? 'hidden' : 'scroll'
+        viewerTextOrientation.val = (isVertical) ? 'upright' : 'mixed'
+        inlineSize.val = (isVertical) ? H : W
+        blockSize.val = (isVertical) ? W  : H
+        document.title = `${inlineSize.val}x${blockSize.val} ${uiHeight.val}`
+        console.log(document.title)
+    }
+    function gridTemplate() {
+        uiWidth.val = ('横長'===longDir.val) ? ((screenWidth.val - menuBlockSize.val) / 2) : screenWidth.val
+        uiHeight.val = ('横長'===longDir.val) ? screenHeight.val : ((screenHeight.val - menuBlockSize.val) / 2)
+        const landscapeSizes = [`${uiWidth.val}px ${menuBlockSize.val}px ${uiWidth.val}px`, `${uiHeight.val}px`]
+        const portraitSizes = [`${uiWidth.val}px`, `${uiHeight.val}px ${menuBlockSize.val}px ${uiHeight.val}px`]
+        const sizes = (('横長'===longDir.val) ? landscapeSizes : portraitSizes)
+        gridTemplateColumns.val = sizes[0]
+        gridTemplateRows.val = sizes[1]
+    }
+    new ResizeObserver(entries=>{
+        //for (let entry of entries) { resize(entry.contentRect.width, entry.contentRect.height) }
+        for (let entry of entries) { console.log(entry.contentBoxSize); resize(entry.contentRect.width, entry.contentRect.height) }
+    }).observe(document.querySelector('body'));
+    document.querySelector(':root').style.setProperty('--block-size', `${blockSize.val}px`)
+    document.querySelector(':root').style.setProperty('--inline-size', `${inlineSize.val}px`)
+    const text = van.state('# 原稿\n\n　これは原稿です。自由に書いてください。\n\n　構文は３つです。見出し、パラグラフ、改行です。\n　見出しは行頭に#と半角スペースのあとに文字を書きます。\n　パラグラフは空行を挟みます。\n　改行は連続したテキスト間にひとつだけ改行を入れるとパラグラフ内で改行できます。\n\n　このテキストエリアに原稿を書くと、↓にHTMLとして表示されます。\n\n　↓のボタンを押すと横書き／縦書きを切替します。\n\n　HTML表示領域は長くなるとスクロールします。縦書きのときは横スクロールですが、マウスホイールでスクロールできます。')
+    function makeBlocks(lines) {
+        const [blocks, block] = [[], []]
+        for (let line of lines) {
+            block.push(line)
+            if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
+        }
+        if (0 < block.length) { blocks.push(block.join('\n')) }
+        return blocks.filter(v=>v)
+    }
+    const htmls = van.derive(()=>{
+        console.log('derive() htmls')
+        const lines = text.val.trim().split(/\r?\n/)
+        const blocks = makeBlocks(lines)
+        return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).map(line=>[span(line), br()]).flat().slice(0, -1)))
+    })
+    console.log('htmls.val:',htmls.val)
+    const writingMode = van.state('horizontal-tb')
+    van.add(document.body, div({id:'viewer', style:()=>`display:grid;grid-template-columns:${gridTemplateColumns.val};grid-template-rows:${gridTemplateRows.val};inline-size:${inlineSize.val};block-size:${blockSize.val};`},
+        textarea({id:'manuscript', placeholder:'原稿', style:()=>`box-sizing:border-box;inline-size:100%;block-size:100%;`,
+            oninput:(e)=>text.val = e.target.value},
+            text.val),
+        button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
+            onclick:()=>{
+                writingMode.val= (('horizontal-tb'===writingMode.val) ? 'vertical-rl' : 'horizontal-tb')
+                resize()
+            }},
+            ()=>(('horizontal-tb'===writingMode.val) ? '横' : '縦')
+        ),
+        // tabindex  https://qiita.com/anzuuuuu/items/c3df59b7e63221d0939c
+        div({id:'html-viewer', tabindex:0, /*class:'focusable',*/ style:()=>`writing-mode:${writingMode.val};text-orientation:${viewerTextOrientation.val};box-sizing:border-box;overflow-x:${viewerOverflowX.val};overflow-y:${viewerOverflowY.val};user-select:none;`,
+            onwheel:(e)=>{
+                if ('vertical-rl'===writingMode.val) {
+                    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
+                    const target = document.querySelector('#html-viewer')
+                    target.scrollLeft += e.deltaY;
+                    e.preventDefault();
+                }
+            },
+            onkeydown:(e)=>{
+                if (['Right','Left','Up','Down'].some((key)=>`Arrow${key}`===e.code)) {
+                    if ('ArrowUp'===e.code) e.target.scrollTop -= 96
+                    if ('ArrowDown'===e.code) e.target.scrollTop += 96
+                    if ('ArrowLeft'===e.code) e.target.scrollLeft -= 96
+                    if ('ArrowRight'===e.code) e.target.scrollLeft += 96
+                    e.preventDefault()
+                }
+                // html-viewerは縦書きでHTML表示したいからdiv要素にする。でもdiv要素はfocusが当たらない。なのでtabindex=0を設定した。標準のキー操作だと矢印の上を押し続けるとbody要素へフォーカスが飛んでしまう。なのでキャレットを排除すべくuser-select:none;にして、かつキーイベントでスクロール操作するよう実装した。
+            },
+            }, 
+            ()=>div(htmls.val))
+    ))
+    focus.setFocusToFirstNode()
+    //document.querySelector('#html-viewer').focus()
+
+    // ボタンは矢印キーを押すとフォーカスがbodyに飛んでしまうので、矢印キーの操作を殺した
+    for (let button of document.querySelectorAll('button')) {
+        button.addEventListener('keydown', async(e) => {
+            if (['Right','Left','Up','Down'].some((key)=>`Arrow${key}`===e.code)) e.preventDefault()
+        })
+    }
+})
+</script>
