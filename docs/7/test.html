@@ -1,0 +1,130 @@
+<script src="../lib/van/1.2.6/nomodule.min.js"></script>
+<script src="util/string/length.js"></script>
+<script>
+const { em, ruby, rt, rp } = van.tags
+const text = '😄これは《《強調》》のテストです。' // サロゲートペアが使われていると字数位置が狂ってしまう
+//const text = 'これは《《強調》》のテストです。'
+const matchs = {
+    'em': [...text.matchAll(/《《([^\n]{1,50}?)》》/g)],
+    'rubyS': [...text.matchAll(/([一-龠々仝〆〇ヶ]{1,50})《([^｜《》\n\r]{1,20})》/g)],
+    'rubyL': [...text.matchAll(/｜([^｜《》\n\r]{1,50})《([^｜《》\n\r]{1,20})》/g)],
+}
+console.log(matchs)
+function matchsEm(text) { // 《《強調》》
+    const matchs = []
+    for (let i=0; i<text.Graphemes.length; i++) {
+        if (i===text.Graphemes.length-1) { continue }
+        const g1 = text.Graphemes[i]
+        const g2 = text.Graphemes[i+1]
+        if ('《'!==g1 || '《'!==g2) { continue }
+        for (let k=i+2; k<text.Graphemes.length; k++) {
+            if (text.Graphemes.length-1<=k) { continue }
+            //if (k===text.Graphemes.length-1) { continue }
+            const g3 = text.Graphemes[k]
+            const g4 = text.Graphemes[k+1]
+            if ('》'!==g3 || '》'!==g4) { continue }
+            const len = k - (i+1) - 1 // g3 - g2 - 1
+            if (len < 2 || 50 < len) { continue }
+
+            const emTxt = text.Graphemes.slice(i+2, k) // (g2+1, g3)
+            if (emTxt.includes('\n')) { continue }
+            //matchs.push({index:i, length:len, html:em(text.Graphemes.slice(i+2, k))})  // (g2+1, g3)
+            //matchs.push({index:i, length:(k+1)-i+1, html:em(text.Graphemes.slice(i+2, k))})  // (g2+1, g3)
+            matchs.push({index:i, length:(k+1)-i+1, html:em(emTxt)})
+            break
+        }
+    }
+    return matchs
+}
+console.log(matchsEm('😄これは《《強調》》のテストです。'))
+console.log(matchsEm('😄これは《《強調》》のテストです。《《複数》》あってもOK！'))
+
+function matchsLongRuby(text) { // ｜あいうえお《アイウエオ》
+    const matchs = []
+    const graphemes = text.Graphemes
+    for (let i=0; i<graphemes .length; i++) {
+        if (i===graphemes.length-1) { continue }
+        const pipe = graphemes[i]
+        if ('｜'!==pipe) { continue }
+        const pipeNext = graphemes[i+1]
+        if ('《'===pipeNext) { continue } // 《》メタ文字エスケープ
+        for (let k=i+2; k<graphemes.length; k++) {
+            if (graphemes.length-1<=k) { continue }
+            const r1 = graphemes[k]
+            if ('《'!==r1) { continue }
+            const rbTxt = graphemes.slice(i+1, k)
+            const baseLen = k - i
+            if (50 < baseLen) { continue } // 親文字50字以上は長すぎるので対象外
+            const r1Prev = graphemes[k-1]
+            if ('｜'===r1Prev) { continue } // 《》メタ文字エスケープ
+            if ('《'===r1Prev) { continue } // em
+            const r1Next = graphemes[k+1]
+            if ('《'===r1Next) { continue } // em
+            for (let m=k+2; m<graphemes.length; m++) {
+                if (graphemes.length-1<=m) { continue }
+                const r2 = graphemes[m]
+                if ('》'!==r2) { continue }
+                const rtTxt = graphemes.slice(k+1, m)
+                const rtLen = m - k
+                if (20 < rtLen) { continue } // ルビ文字20字以上は長すぎるので対象外
+                if (graphemes.slice(i, m).includes('\n')) { continue } // 途中に改行があると無効
+                matchs.push({index:i, length:m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})  // (g2+1, g3)
+                break
+            }
+            break
+        }
+    }
+    return matchs
+}
+console.log(matchsLongRuby('これは｜送り仮名《ルビ》のテストです。'))
+console.log(matchsLongRuby('これは｜送り仮名《ルビ》のテストです。｜複数《ふくすう》あってもOK！'))
+
+
+//    #SHORT = /([一-龠々仝〆〇ヶ]{1,50})《([^｜《》\n\r]{1,20})》/g
+//    #LONG = /｜([^｜《》\n\r]{1,50})《([^｜《》\n\r]{1,20})》/g
+//    #ESCAPE = /｜《/g
+function matchsShortRuby(text) { // 漢字《かんじ》
+    const matchs = []
+    const graphemes = text.Graphemes
+    const KANJI_MIN = '一'.codePointAt(0)
+    const KANJI_MAX = '龠'.codePointAt(0)
+    const KANJI_ANO = ['々','仝','〆','〇','ヶ'].map(k=>k.codePointAt(0))
+    for (let i=0; i<graphemes.length; i++) {
+
+graphemes[i]
+        if (i===graphemes.length-1) { continue }
+        const pipe = graphemes[i]
+        if ('｜'!==pipe) { continue }
+        const pipeNext = graphemes[i+1]
+        if ('《'===pipeNext) { continue } // 《》メタ文字エスケープ
+        for (let k=i+2; k<graphemes.length; k++) {
+            if (graphemes.length-1<=k) { continue }
+            const r1 = graphemes[k]
+            if ('《'!==r1) { continue }
+            const rbTxt = graphemes.slice(i+1, k)
+            const baseLen = k - i
+            if (50 < baseLen) { continue } // 親文字50字以上は長すぎるので対象外
+            const r1Prev = graphemes[k-1]
+            if ('｜'===r1Prev) { continue } // 《》メタ文字エスケープ
+            if ('《'===r1Prev) { continue } // em
+            const r1Next = graphemes[k+1]
+            if ('《'===r1Next) { continue } // em
+            for (let m=k+2; m<graphemes.length; m++) {
+                if (graphemes.length-1<=m) { continue }
+                const r2 = graphemes[m]
+                if ('》'!==r2) { continue }
+                const rtTxt = graphemes.slice(k+1, m)
+                const rtLen = m - k
+                if (20 < rtLen) { continue } // ルビ文字20字以上は長すぎるので対象外
+                matchs.push({index:i, length:m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})  // (g2+1, g3)
+                break
+            }
+            break
+        }
+    }
+    return matchs
+}
+console.log(matchsShortRuby('これは漢字《かんじ》のテストです。'))
+console.log(matchsShortRuby('これは漢字《かんじ》のテストです。複数《ふくすう》あってもOK！'))
+
+</script>

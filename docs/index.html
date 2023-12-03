@@ -16,12 +16,10 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         '画面分割を長辺側で行うよう対応',
         'タブキーでフォーカスが循環するよう対応',
         'リファクタリング（HtmlViewerを別ファイル化）',
-        'リファクタリング（FocusLooperを別ファイル化）',
-        'リファクタリング（AppStyleを別ファイル化）',
+        'リファクタリング（FocusLooper,AppStyleを別ファイル化）',
+        'ruby,emタグ書式対応（途中）',
         /*
-        'リファクタリング（別ファイル化。単一ファイルは無謀だったので今は断念）',
-        'リファクタリング（別ファイル化。単一ファイルは無謀だったので今は断念）',
-        'ruby,emタグ書式対応',
+        '',
 
         'フォントサイズ自動最適化（16px〜/字かつ20〜40字/行）',
         'エクスポート機能追加',
@@ -38,7 +36,8 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         h1('Javel.Writer.Mini.VanJS'),
         p('テキストで縦書き小説を書くツールの仮作成。'),
         ol({start:0},
-            items.map((item, i)=>li(a({href:`app-${i}.html`}, item)))
+            //items.map((item, i)=>li(a({href:`app-${i}.html`}, item)))
+            items.map((item, i)=>li(a({href:()=>(i<7) ? `app-${i}.html` : `${i}/app.html`}, item)))
         ),
     )
 })
