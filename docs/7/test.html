@@ -80,45 +80,36 @@ console.log(matchsLongRuby('これは｜送り仮名《ルビ》のテストで�
 console.log(matchsLongRuby('これは｜送り仮名《ルビ》のテストです。｜複数《ふくすう》あってもOK！'))
 
 
+function isKanji(g) {
+    const G = g.codePointAt(0)
+    const KANJI_MIN = '一'.codePointAt(0)
+    const KANJI_MAX = '龠'.codePointAt(0)
+    const KANJI_ANO = ['々','仝','〆','〇','ヶ'].map(k=>k.codePointAt(0))
+    if (KANJI_MIN <= G && G <= KANJI_MAX) { return true }
+    if (KANJI_ANO.some(k=>k===G)) { return true }
+    return false
+}
 //    #SHORT = /([一-龠々仝〆〇ヶ]{1,50})《([^｜《》\n\r]{1,20})》/g
 //    #LONG = /｜([^｜《》\n\r]{1,50})《([^｜《》\n\r]{1,20})》/g
 //    #ESCAPE = /｜《/g
 function matchsShortRuby(text) { // 漢字《かんじ》
     const matchs = []
     const graphemes = text.Graphemes
-    const KANJI_MIN = '一'.codePointAt(0)
-    const KANJI_MAX = '龠'.codePointAt(0)
-    const KANJI_ANO = ['々','仝','〆','〇','ヶ'].map(k=>k.codePointAt(0))
     for (let i=0; i<graphemes.length; i++) {
-
-graphemes[i]
-        if (i===graphemes.length-1) { continue }
-        const pipe = graphemes[i]
-        if ('｜'!==pipe) { continue }
-        const pipeNext = graphemes[i+1]
-        if ('《'===pipeNext) { continue } // 《》メタ文字エスケープ
-        for (let k=i+2; k<graphemes.length; k++) {
-            if (graphemes.length-1<=k) { continue }
-            const r1 = graphemes[k]
-            if ('《'!==r1) { continue }
-            const rbTxt = graphemes.slice(i+1, k)
-            const baseLen = k - i
-            if (50 < baseLen) { continue } // 親文字50字以上は長すぎるので対象外
-            const r1Prev = graphemes[k-1]
-            if ('｜'===r1Prev) { continue } // 《》メタ文字エスケープ
-            if ('《'===r1Prev) { continue } // em
-            const r1Next = graphemes[k+1]
-            if ('《'===r1Next) { continue } // em
-            for (let m=k+2; m<graphemes.length; m++) {
-                if (graphemes.length-1<=m) { continue }
-                const r2 = graphemes[m]
-                if ('》'!==r2) { continue }
-                const rtTxt = graphemes.slice(k+1, m)
-                const rtLen = m - k
-                if (20 < rtLen) { continue } // ルビ文字20字以上は長すぎるので対象外
-                matchs.push({index:i, length:m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})  // (g2+1, g3)
-                break
-            }
+        const r1 = graphemes[i]
+        if ('《'!==r1) { continue }
+        const K = i;
+        for (let k=i-1; 0<=k; k--) {
+            if (!isKanji(graphemes[k]) && '｜'===graphemes[k]) { break } // 非漢字ならルビ対象外。｜ならLongRubyの可能性有で対象外
+            K = k
+        }
+        if (K===i) { continue } // 親文字（漢字）がない
+        const rbTxt = graphemes.slice(K, i)
+        for (let m=i+2; m<graphemes.length; m++) {
+            const r2 = graphemes[m]
+            if ('》'!==r2) { continue }
+            const rtTxt = graphemes.slice(i+1, m)
+            matchs.push({index:i, length:m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})
             break
         }
     }
@@ -127,4 +118,28 @@ graphemes[i]
 console.log(matchsShortRuby('これは漢字《かんじ》のテストです。'))
 console.log(matchsShortRuby('これは漢字《かんじ》のテストです。複数《ふくすう》あってもOK！'))
 
+function matchsRuby(text) { // 漢字《かんじ》, ｜あいうえお《アイウエオ》
+    if (!(text.includes('《') && text.includes('》'))) { return [] }
+    const matchs = [...matchsLongRuby(text), ...matchsShortRuby(text)].flat()
+    return matchs.sort((a,b)=>a.index < b.index)
+}
+function matchsEmRuby(text) { // 漢字《かんじ》, ｜あいうえお《アイウエオ》
+    if (!(text.includes('《') && text.includes('》'))) { return [] }
+    const matchs = [...matchsEm(text), ...matchsLongRuby(text), ...matchsShortRuby(text)].flat()
+    return matchs.sort((a,b)=>a.index < b.index)
+}
+function makeInnerHtml(text) {
+    const matches = matchsEmRuby(text)
+    const spans = []
+    const start = 0
+    for (let i=0; i<matches.length; i++) {
+        const length = matches[i].index
+        spans.push({index:start, length:length, html:span(text.slice(start, length))})
+        start = matches[i].index + matches[i].length
+    }
+    matches.extends(spans).sort((a,b)=>a.index < b.index)
+    return matches.map(m=>m.html)
+}
+
+console.log(matchsInnerHtml('これは複合《ふくごう》《《テスト》》です。｜あいうえお《アイウエオ》。'.repeat(2)))
 </script>
