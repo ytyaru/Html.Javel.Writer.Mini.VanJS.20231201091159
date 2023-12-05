@@ -2,9 +2,11 @@
 const { div, span, h1, p, br } = van.tags
 class HtmlViewer {
     constructor() {
+        this.parser = new JavelParser()
         this._id = 'html-viewer'
         this.ja = van.state('# 原稿\n\n　これは原稿です。自由に書いてください。\n\n　構文は３つです。見出し、パラグラフ、改行です。\n　見出しは行頭に#と半角スペースのあとに文字を書きます。\n　パラグラフは空行を挟みます。\n　改行は連続したテキスト間にひとつだけ改行を入れるとパラグラフ内で改行できます。\n\n　このテキストエリアに原稿を書くと、↓にHTMLとして表示されます。\n\n　↓のボタンを押すと横書き／縦書きを切替します。\n\n　HTML表示領域は長くなるとスクロールします。縦書きのときは横スクロールですが、マウスホイールでスクロールできます。\n\n# ｜見出し《heading》で《《強調》》と送《おく》り仮名《がな》\n\n　拡張構文としてemとrubyを実装しました。｜《｜《強調｜》｜》のようにすると傍点（圏点）がつきます。また、漢字｜《かんじ｜》のように書くとルビが振れます。もし漢字以外の文字が含まれている箇所にルビを振りたいときは最初の文字にハイフンをつけます。｜あいうえお《アイウエオ》のようになります。')
-        this._htmls = van.derive(this.#jaToHtmls.bind(this))
+        //this._htmls = van.derive(this.#jaToHtmls.bind(this))
+        this._htmls = van.derive(()=>this.parser.toHtmls(this.ja.val))
         this.writingMode = van.state('vertical-rl')
         console.log(this.writingMode.val)
         this.textOrientation = van.state('upright')
@@ -44,39 +46,6 @@ class HtmlViewer {
     }
     // html-viewerは縦書きでHTML表示したいからdiv要素にする。でもdiv要素はfocusが当たらない。なのでtabindex=0を設定した。標準のキー操作だと矢印の上を押し続けるとbody要素へフォーカスが飛んでしまう。なのでキャレットを排除すべくuser-select:none;にして、かつキーイベントでスクロール操作するよう実装した。
     #style() { console.log(this.writingMode.val);return `writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
-    #jaToHtmls() {
-        console.log('derive() htmls', this)
-        const lines = this.ja.val.trim().split(/\r?\n/)
-        const blocks = this.#makeBlocks(lines)
-        return this.#blocksToHtmls(blocks)
-    }
-    #makeBlocks(lines) {
-        const [blocks, block] = [[], []]
-        for (let line of lines) {
-            block.push(line)
-            if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
-        }
-        if (0 < block.length) { blocks.push(block.join('\n')) }
-        return blocks.filter(v=>v)
-    }
-    #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
-
-    #inline(text) {
-        const inlines = []
-        inlines.push(this.#em(...))
-        inlines.push(this.#ruby(...))
-        inlines.push(this.#span(...))
-        //inlines.push({start:0, end:0, html:this.#em()})
-        '《《'
-        '》》'
-    }
-    #isEm(text) {
-        const REGEX_DOT = /《《([^\n]{1,50}?)》》/g;
-    }
-    #em(text) { return em(text) }
-    #ruby(base, rt) { return ruby(base, rp('（'), rt(rt), rp('）'))
-
-    }
 }
 window.HtmlViewer = HtmlViewer
 })()

@@ -1,0 +1,114 @@
+(function(){
+class JavelParser {
+    constructor() { this.textBlocks=null; this.htmlBlocks=null; }
+    toHtmls(ja) { // 全文パース
+        console.log('derive() htmls', this)
+        //const lines = ja.trim().split(/\r?\n/)
+        const lines = this.#textToLines(ja)
+//        const blocks = this.#makeBlocks(lines)
+//        return this.#blocksToHtmls(blocks)
+        //this.textBlocks = this.#makeBlocks(lines)
+        this.textBlocks = this.#linesToBlocks(lines)
+        //return this.#blocksToHtmls(blocks)
+        this.htmlBlocks = this.#blocksToHtmls(blocks)
+        return this.htmlBlocks
+    }
+    paste(ja, blockIndex) { // ペーストした箇所だけパースする（負荷軽減）
+        const lines = this.#textToLines(ja)
+        const blocks = this.#linesToBlocks(lines)
+        this.textBlocks[blockIndex] = blocks[0]
+        this.textBlocks.splice(blockIndex+1, blocks.slice(1))
+        const htmls = this.#blocksToHtmls(blocks)
+        this.htmlBlocks[blockIndex] = htmls[0]
+        this.htmlBlocks.splice(blockIndex+1, htmls.slice(1))
+        return htmlBlocks
+    }
+    #textToLines(text) { return text.trim().split(/\r?\n/) }
+    #linesToBlocks(lines) {
+    //#makeBlocks(lines) {
+        //this.textBlocks = []
+        const [blocks, block] = [[], []]
+        for (let line of lines) {
+            block.push(line)
+            if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
+            //if (''===line && 0 < block.length) { this.textBlocks.push(block.join('\n')); block.splice(0); }
+        }
+        if (0 < block.length) { blocks.push(block.join('\n')) }
+        //if (0 < block.length) { this.textBlocks.push(block.join('\n')) }
+        return blocks.filter(v=>v)
+        //this.textBlocks.filter(v=>v)
+    }
+    //#blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
+    #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(this.#inline(block.slice(2)).flat()) : p(block.split(/\n/).filter(v=>v).map(line=>[this.#inline(line).flat(), br()]).flat().slice(0, -1))) }
+    #inline(text) {
+        const inlines = []
+        inlines.push(this.#em(...))
+        inlines.push(this.#ruby(...))
+        inlines.push(this.#span(...))
+        const matchs = {
+            'em': text.matchAll(/《《([^\n]{1,50}?)》》/g),
+            'rubyS': text.matchAll(/([一-龠々仝〆〇ヶ]{1,50})《([^｜《》\n\r]{1,20})》/g),
+            'rubyL': text.matchAll(/｜([^｜《》\n\r]{1,50})《([^｜《》\n\r]{1,20})》/g),
+        }
+        console.log(matchs)
+        Em.matches()
+        //inlines.push({start:0, end:0, html:this.#em()})
+        '《《'
+        '》》'
+        return inlines
+    }
+    #isEm(text) {
+        const REGEX_DOT = /《《([^\n]{1,50}?)》》/g;
+    }
+    #em(text) { return em(text) }
+    #ruby(base, rt) { return ruby(base, rp('（'), rt(rt), rp('）'))
+
+    }
+
+}
+Em.matchs()
+Em.parse()
+Ruby.parse()
+class Em {
+    static #REGEX = /《《([^\n]{1,50}?)》》/g;
+    static matchs(text) {
+        const matchs = []
+        for (let i=0; i<text.Graphemes.length; i++) {
+            if (i===text.Graphemes.length-1) { continue }
+            const g1 = text.Graphemes[i]
+            const g2 = text.Graphemes[i+1]
+            if ('《'!==g1 || '《'!==g2) { continue }
+
+            for (let k=i+2; k<text.Graphemes.length; k++) {
+                if (k===text.Graphemes.length-1) { continue }
+                const g3 = text.Graphemes[k]
+                const g4 = text.Graphemes[k+1]
+                if ('》'!==g3 || '》'!==g4) { continue }
+                const len = k - (i+1) - 1 // g3 - g2 - 1
+                if (len < 2 || 50 < len) { continue }
+                matchs.push({index:i, length:len, html:em(text.Graphemes.slice(i+2, k))})  // (g2+1, g3)
+            }
+        }
+        return matchs
+    }
+//    static matchs(text) { return [...text.matchAll(this.#REGEX)] }
+    static parse(text) {
+        return text.replace(this.#REGEX, (match, p1)=>{
+            const text = [...p1].map(a => `<span>${a}</span>`).join('');
+            return `<em class="emphasis">${text}</em>`;
+        });
+    }
+}
+class RubyParser {
+    #SHORT = /([一-龠々仝〆〇ヶ]{1,50})《([^｜《》\n\r]{1,20})》/g
+    #LONG = /｜([^｜《》\n\r]{1,50})《([^｜《》\n\r]{1,20})》/g
+    #ESCAPE = /｜《/g
+    parse(src) { return this.#escape([this.#LONG, this.#SHORT].reduce((src, reg)=>
+            src.replace(reg, (match, rb, rt)=>{ return this.#toHtml(rb, rt) }), src)) }
+    #escape(src) { return src.replace(this.#ESCAPE, (match)=>'《') }
+    #toHtml(rb, rt) { return `<ruby>${rb}<rp>（</rp><rt>${rt}</rt><rp>）</rp></ruby>` }
+}
+
+
+window.Parser = new Parser()
+})()

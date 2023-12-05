@@ -1,91 +1,194 @@
 (function(){
+const { h1, p, br, em, ruby, rt, rp, span } = van.tags
 class JavelParser {
-    toHtmls(ja) {
+    constructor() { this.textBlocks=null; this.htmlBlocks=null; }
+    toHtmls(ja) { // 全文パース
         console.log('derive() htmls', this)
-        const lines = ja.trim().split(/\r?\n/)
-        const blocks = this.#makeBlocks(lines)
-        return this.#blocksToHtmls(blocks)
+        //const lines = ja.trim().split(/\r?\n/)
+        const lines = this.#textToLines(ja)
+//        const blocks = this.#makeBlocks(lines)
+//        return this.#blocksToHtmls(blocks)
+        //this.textBlocks = this.#makeBlocks(lines)
+        this.textBlocks = this.#linesToBlocks(lines)
+        //return this.#blocksToHtmls(blocks)
+        this.htmlBlocks = this.#blocksToHtmls(this.textBlocks)
+        return this.htmlBlocks
     }
-    #makeBlocks(lines) {
+    paste(ja, blockIndex) { // ペーストした箇所だけパースする（負荷軽減）
+        const lines = this.#textToLines(ja)
+        const blocks = this.#linesToBlocks(lines)
+        this.textBlocks[blockIndex] = blocks[0]
+        this.textBlocks.splice(blockIndex+1, blocks.slice(1))
+        const htmls = this.#blocksToHtmls(blocks)
+        this.htmlBlocks[blockIndex] = htmls[0]
+        this.htmlBlocks.splice(blockIndex+1, htmls.slice(1))
+        return htmlBlocks
+    }
+    delete(blockIndex, length) { // 範囲選択して削除した時
+
+    }
+    #textToLines(text) { return text.trim().split(/\r?\n/) }
+    #linesToBlocks(lines) {
+    //#makeBlocks(lines) {
+        //this.textBlocks = []
         const [blocks, block] = [[], []]
         for (let line of lines) {
             block.push(line)
             if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
+            //if (''===line && 0 < block.length) { this.textBlocks.push(block.join('\n')); block.splice(0); }
         }
         if (0 < block.length) { blocks.push(block.join('\n')) }
+        //if (0 < block.length) { this.textBlocks.push(block.join('\n')) }
         return blocks.filter(v=>v)
+        //this.textBlocks.filter(v=>v)
     }
-    #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
-
+    //#blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
+    #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(this.#inline(block.slice(2)).flat()) : p(block.split(/\n/).filter(v=>v).map(line=>[this.#inline(line).flat(), br()]).flat().slice(0, -1))) }
     #inline(text) {
-        const inlines = []
-        inlines.push(this.#em(...))
-        inlines.push(this.#ruby(...))
-        inlines.push(this.#span(...))
-        const matchs = {
-            'em': text.matchAll(/《《([^\n]{1,50}?)》》/g),
-            'rubyS': text.matchAll(/([一-龠々仝〆〇ヶ]{1,50})《([^｜《》\n\r]{1,20})》/g),
-            'rubyL': text.matchAll(/｜([^｜《》\n\r]{1,50})《([^｜《》\n\r]{1,20})》/g),
+        const matches = EmRuby.matches(text)
+        console.log(matches)
+        const spans = []
+        let start = 0
+        for (let i=0; i<matches.length; i++) {
+            const length = matches[i].index
+            if (start === length) continue
+            //spans.push({index:start, length:length, html:span(class:'text-node', text.slice(start, length))})
+            spans.push({index:start, length:length, html:span({class:'text-node'}, text.slice(start, length))})
+            start = matches[i].index + matches[i].length
         }
-        console.log(matchs)
-        Em.matches()
-        //inlines.push({start:0, end:0, html:this.#em()})
-        '《《'
-        '》》'
-        return inlines
+        matches.push(spans)
+        console.log(matches.flat().sort((a,b)=>a.index - b.index))
+        console.log(matches.flat().sort((a,b)=>a.index - b.index).map(m=>m.html))
+        console.log(matches.flat().sort((a,b)=>a.index - b.index).map(m=>m.html.innerText))
+        return matches.flat().sort((a,b)=>a.index - b.index).map(m=>m.html)
     }
-    #isEm(text) {
-        const REGEX_DOT = /《《([^\n]{1,50}?)》》/g;
-    }
-    #em(text) { return em(text) }
-    #ruby(base, rt) { return ruby(base, rp('（'), rt(rt), rp('）'))
-
-    }
-
 }
-Em.matchs()
-Em.parse()
-Ruby.parse()
+class EmRuby {
+    static matches(text) { // 漢字《かんじ》, ｜あいうえお《アイウエオ》
+        if (!(text.includes('《') && text.includes('》'))) { return [] }
+//        console.log('Em:', Em.matches(text).flat().map(m=>m.innerText))
+//        console.log('Ruby.Long:', Ruby.matchesLong(text).flat().map(m=>m.innerText))
+//        console.log('Ruby.Short:', Ruby.matchesShort(text).flat().map(m=>m.innerText))
+        console.log('Em:', Em.matches(text).map(m=>m.html.outerHTML))
+        console.log('Ruby.Long:', Ruby.matchesLong(text).map(m=>m.html.outerHTML))
+        console.log('Ruby.Short:', Ruby.matchesShort(text).map(m=>m.html.outerHTML))
+        const matches = [...Em.matches(text), ...Ruby.matchesLong(text), ...Ruby.matchesShort(text)].flat()
+        return matches.sort((a,b)=>a.index - b.index)
+    }
+}
 class Em {
-    static #REGEX = /《《([^\n]{1,50}?)》》/g;
-    static matchs(text) {
-        const matchs = []
+    static matches(text) { // 《《強調》》
+        const matches = []
+        console.log(text)
+        console.log(text.Graphemes)
+        console.log(text.Graphemes.length)
         for (let i=0; i<text.Graphemes.length; i++) {
             if (i===text.Graphemes.length-1) { continue }
             const g1 = text.Graphemes[i]
             const g2 = text.Graphemes[i+1]
             if ('《'!==g1 || '《'!==g2) { continue }
-
             for (let k=i+2; k<text.Graphemes.length; k++) {
-                if (k===text.Graphemes.length-1) { continue }
+                if (text.Graphemes.length-1<=k) { continue }
+                //if (k===text.Graphemes.length-1) { continue }
                 const g3 = text.Graphemes[k]
                 const g4 = text.Graphemes[k+1]
                 if ('》'!==g3 || '》'!==g4) { continue }
                 const len = k - (i+1) - 1 // g3 - g2 - 1
                 if (len < 2 || 50 < len) { continue }
-                matchs.push({index:i, length:len, html:em(text.Graphemes.slice(i+2, k))})  // (g2+1, g3)
+
+                const emTxt = text.Graphemes.slice(i+2, k) // (g2+1, g3)
+                if (emTxt.includes('\n')) { continue }
+                //matches.push({index:i, length:len, html:em(text.Graphemes.slice(i+2, k))})  // (g2+1, g3)
+                //matches.push({index:i, length:(k+1)-i+1, html:em(text.Graphemes.slice(i+2, k))})  // (g2+1, g3)
+                matches.push({index:i, length:(k+1)-i+1, html:em(emTxt)})
+                break
             }
         }
-        return matchs
-    }
-//    static matchs(text) { return [...text.matchAll(this.#REGEX)] }
-    static parse(text) {
-        return text.replace(this.#REGEX, (match, p1)=>{
-            const text = [...p1].map(a => `<span>${a}</span>`).join('');
-            return `<em class="emphasis">${text}</em>`;
-        });
+        return matches
     }
 }
-class RubyParser {
-    #SHORT = /([一-龠々仝〆〇ヶ]{1,50})《([^｜《》\n\r]{1,20})》/g
-    #LONG = /｜([^｜《》\n\r]{1,50})《([^｜《》\n\r]{1,20})》/g
-    #ESCAPE = /｜《/g
-    parse(src) { return this.#escape([this.#LONG, this.#SHORT].reduce((src, reg)=>
-            src.replace(reg, (match, rb, rt)=>{ return this.#toHtml(rb, rt) }), src)) }
-    #escape(src) { return src.replace(this.#ESCAPE, (match)=>'《') }
-    #toHtml(rb, rt) { return `<ruby>${rb}<rp>（</rp><rt>${rt}</rt><rp>）</rp></ruby>` }
+class Ruby {
+    static KANJI = {
+        MIN: '一'.codePointAt(0),
+        MAX: '龠'.codePointAt(0),
+        ANO: ['々','仝','〆','〇','ヶ'].map(k=>k.codePointAt(0)),
+    }
+    static matches(text) { // ｜あいうえお《アイウエオ》
+        if (!(text.includes('《') && text.includes('》'))) { return [] }
+        const matches = [...this.matchesLong(text), ...this.matchesShort(text)].flat()
+        return matches.sort((a,b)=>a.index - b.index)
+    }
+    static matchesLong(text) { // ｜あいうえお《アイウエオ》
+        const matches = []
+        const graphemes = text.Graphemes
+        for (let i=0; i<graphemes .length; i++) {
+            if (i===graphemes.length-1) { continue }
+            const pipe = graphemes[i]
+            if ('｜'!==pipe) { continue }
+            const pipeNext = graphemes[i+1]
+            if ('《'===pipeNext) { continue } // 《》メタ文字エスケープ
+            for (let k=i+2; k<graphemes.length; k++) {
+                if (graphemes.length-1<=k) { continue }
+                const r1 = graphemes[k]
+                if ('《'!==r1) { continue }
+                const rbTxt = graphemes.slice(i+1, k)
+                const baseLen = k - i
+                if (50 < baseLen) { continue } // 親文字50字以上は長すぎるので対象外
+                const r1Prev = graphemes[k-1]
+                if ('｜'===r1Prev) { continue } // 《》メタ文字エスケープ
+                if ('《'===r1Prev) { continue } // em
+                const r1Next = graphemes[k+1]
+                if ('《'===r1Next) { continue } // em
+                for (let m=k+2; m<graphemes.length; m++) {
+                    if (graphemes.length-1<=m) { continue }
+                    const r2 = graphemes[m]
+                    if ('》'!==r2) { continue }
+                    const rtTxt = graphemes.slice(k+1, m)
+                    const rtLen = m - k
+                    if (20 < rtLen) { continue } // ルビ文字20字以上は長すぎるので対象外
+                    if (graphemes.slice(i, m).includes('\n')) { continue } // 途中に改行があると無効
+                    matches.push({index:i, length:m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})  // (g2+1, g3)
+                    break
+                }
+                break
+            }
+        }
+        return matches
+    }
+    static #isKanji(g) { // g:Intl.Segmenter.graphemes
+        const G = g.codePointAt(0)
+        if (this.KANJI.MIN <= G && G <= this.KANJI.MAX) { return true }
+        if (this.KANJI.ANO.some(k=>k===G)) { return true }
+        return false
+    }
+    static matchesShort(text) { // 漢字《かんじ》
+        const matches = []
+        const graphemes = text.Graphemes
+        for (let i=0; i<graphemes.length; i++) {
+            const r1 = graphemes[i]
+            if ('《'!==r1) { continue }
+            let K = i;
+            for (let k=i-1; 0<=k; k--) {
+                console.log('isKanji:', graphemes[k], this.#isKanji(graphemes[k]))
+                //if (!this.#isKanji(graphemes[k]) || '｜'===graphemes[k]) { break } // 非漢字ならルビ対象外。｜ならLongRubyの可能性有で対象外
+                if (!this.#isKanji(graphemes[k])) { break } // 非漢字ならルビ対象外。
+                if ('｜'===graphemes[k]) { K=i; break; } // ｜ならLongRubyの可能性有で対象外（２段breakしたくてK=i continue使用）
+                K = k
+            }
+            if (K===i) { continue } // 親文字（漢字）がない
+            const rbTxt = graphemes.slice(K, i)
+            console.log('rbTxt:', rbTxt, K, i)
+            for (let m=i+2; m<graphemes.length; m++) {
+                const r2 = graphemes[m]
+                if ('》'!==r2) { continue }
+                const rtTxt = graphemes.slice(i+1, m)
+                matches.push({index:K, length:(i-K)+m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})
+                break
+            }
+        }
+        return matches
+    }
 }
-
-
-window.Parser = new Parser()
+//window.parser = new JavelParser()
+window.JavelParser = JavelParser
 })()

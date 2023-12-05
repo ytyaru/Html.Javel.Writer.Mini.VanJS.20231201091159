@@ -1,7 +1,7 @@
 <script src="../lib/van/1.2.6/nomodule.min.js"></script>
 <script src="util/string/length.js"></script>
 <script>
-const { em, ruby, rt, rp } = van.tags
+const { em, ruby, rt, rp, span } = van.tags
 const text = '😄これは《《強調》》のテストです。' // サロゲートペアが使われていると字数位置が狂ってしまう
 //const text = 'これは《《強調》》のテストです。'
 const matchs = {
@@ -98,18 +98,21 @@ function matchsShortRuby(text) { // 漢字《かんじ》
     for (let i=0; i<graphemes.length; i++) {
         const r1 = graphemes[i]
         if ('《'!==r1) { continue }
-        const K = i;
+        let K = i;
         for (let k=i-1; 0<=k; k--) {
-            if (!isKanji(graphemes[k]) && '｜'===graphemes[k]) { break } // 非漢字ならルビ対象外。｜ならLongRubyの可能性有で対象外
+            console.log('isKanji:', graphemes[k], isKanji(graphemes[k]))
+            if (!isKanji(graphemes[k]) || '｜'===graphemes[k]) { break } // 非漢字ならルビ対象外。｜ならLongRubyの可能性有で対象外
             K = k
         }
         if (K===i) { continue } // 親文字（漢字）がない
+        //const rbTxt = graphemes.slice(K, i)
         const rbTxt = graphemes.slice(K, i)
+        console.log('rbTxt:', rbTxt, K, i)
         for (let m=i+2; m<graphemes.length; m++) {
             const r2 = graphemes[m]
             if ('》'!==r2) { continue }
             const rtTxt = graphemes.slice(i+1, m)
-            matchs.push({index:i, length:m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})
+            matchs.push({index:K, length:(i-K)+m-i+1, html:ruby(rbTxt, rp('（'), rt(rtTxt), rp('）'))})
             break
         }
     }
@@ -121,25 +124,30 @@ console.log(matchsShortRuby('これは漢字《かんじ》のテストです。
 function matchsRuby(text) { // 漢字《かんじ》, ｜あいうえお《アイウエオ》
     if (!(text.includes('《') && text.includes('》'))) { return [] }
     const matchs = [...matchsLongRuby(text), ...matchsShortRuby(text)].flat()
-    return matchs.sort((a,b)=>a.index < b.index)
+    return matchs.sort((a,b)=>a.index - b.index)
 }
 function matchsEmRuby(text) { // 漢字《かんじ》, ｜あいうえお《アイウエオ》
     if (!(text.includes('《') && text.includes('》'))) { return [] }
     const matchs = [...matchsEm(text), ...matchsLongRuby(text), ...matchsShortRuby(text)].flat()
-    return matchs.sort((a,b)=>a.index < b.index)
+    return matchs.sort((a,b)=>a.index - b.index)
 }
-function makeInnerHtml(text) {
+function makeInnerHtmls(text) {
     const matches = matchsEmRuby(text)
+    console.log(matches)
     const spans = []
-    const start = 0
+    let start = 0
     for (let i=0; i<matches.length; i++) {
         const length = matches[i].index
-        spans.push({index:start, length:length, html:span(text.slice(start, length))})
+        if (start === length) continue
+        spans.push({index:start, length:length, html:span({class:'text-node'}, text.slice(start, length))})
         start = matches[i].index + matches[i].length
     }
-    matches.extends(spans).sort((a,b)=>a.index < b.index)
-    return matches.map(m=>m.html)
+    matches.push(spans)
+    console.log(matches.flat().sort((a,b)=>a.index - b.index))
+    console.log(matches.flat().sort((a,b)=>a.index - b.index).map(m=>m.html))
+    console.log(matches.flat().sort((a,b)=>a.index - b.index).map(m=>m.html.innerText))
+    return matches.flat().sort((a,b)=>a.index - b.index).map(m=>m.html)
 }
 
-console.log(matchsInnerHtml('これは複合《ふくごう》《《テスト》》です。｜あいうえお《アイウエオ》。'.repeat(2)))
+console.log(makeInnerHtmls('これは複合《ふくごう》《《テスト》》です。｜あいうえお《アイウエオ》。'.repeat(2)))
 </script>

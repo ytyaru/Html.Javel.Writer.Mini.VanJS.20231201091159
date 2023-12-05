@@ -16,8 +16,10 @@ body, textarea {
 button { user-select:none; }
 h1 { font-family: 'Noto Sans JP', 'Source Han Sans JP', 'Noto Color Emoji', sans-serif; }
 </style>
+<script type="text/javascript" src="util/string/length.js"></script>
 <script type="text/javascript" src="../lib/van/1.2.6/nomodule.min.js"></script>
 <script type="text/javascript" src="focus-looper.js"></script>
+<script type="text/javascript" src="javel-parser.js"></script>
 <script type="text/javascript" src="html-viewer.js"></script>
 <script type="text/javascript" src="app-style.js"></script>
 <script>
@@ -28,6 +30,10 @@ window.addEventListener('DOMContentLoaded', async(event) => {
     van.add(document.body, div({id:'javel-writer-min', style:appStyle.style.bind(appStyle)},
         textarea({id:'manuscript', placeholder:'原稿', style:()=>`box-sizing:border-box;`,
             oninput:(e)=>htmlViewer.ja.val = e.target.value},
+            //oninput:(e)=>{
+            //    // 
+            //    htmlViewer.ja.val = e.target.value
+            //},
             htmlViewer.ja.val),
         button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
             onclick:htmlViewer.toggleWritingMode.bind(htmlViewer),
