@@ -4,8 +4,6 @@ class TextInput {
     constructor(htmlViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.isComposing=false; }
     get element() { return textarea({id:this.id, placeholder:'原稿', style:()=>`box-sizing:border-box;`,
         oninput:(e)=>this.#onInput(e),
-        oncut:(e)=>this.#onCut(e),
-        onpaste:(e)=>this.#onPaste(e),
         oncompositionend:(e)=>this.htmlViewer.ja.val = e.target.value},
         this.htmlViewer.ja.val)
     }
@@ -45,13 +43,16 @@ class TextInput {
 //        console.log(e.target.getSelection().getRangeAt(0).anchorNode)
         console.log(e.target.selectionStart)
         console.log(e.target.selectionEnd)
-        
+
+        const [index, block] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
+
+        /*
         // 変更箇所だけパースしたい
         //   テキストブロック・インデックス取得
         //     textarea.selectionEndで何文字目かわかる
         //     それ以前のテキストにいくつブロックがあったか計算する（ブロックは2つ以上の連続した改行）
         const text = document.querySelector(`#${this.id}`).value.trim()
-        console.log(e.target)
         const textBefore = text.slice(0, e.target.selectionEnd) // キャレット位置より前
         const textAfter = text.slice(e.target.selectionEnd) // キャレット位置より後
         //const selectedBlockIndex = (text.slice(0, e.target.selectionEnd).match(/[\n]{2,}/g) || []).length
@@ -73,16 +74,10 @@ class TextInput {
         //this.htmlViewer._htmls.val = this.htmlViewer.parser.setBlockText(selectedBlockIndex, block)
         this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(selectedBlockIndex, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
 //        this.htmlViewer._htmls = this.htmlViewer.parser.setBlockText(selectedBlockIndex, block)
+        */
     }
-    #onCut(e) {
-        
-    }
-    #onPaste(e) {
-        
-    }
-    #getBeforeAfterBlocks() {
-        
-    }
+    #selectedBlockIndex() { return }
+
 
     setup() {
         this.htmlViewer._htmls.val = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
