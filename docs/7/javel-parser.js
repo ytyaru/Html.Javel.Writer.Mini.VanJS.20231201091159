@@ -11,7 +11,9 @@ class JavelParser {
         //this.textBlocks = this.#makeBlocks(lines)
         this.textBlocks = this.#linesToBlocks(lines)
         //return this.#blocksToHtmls(blocks)
+        console.log(this.textBlocks)
         this.htmlBlocks = this.#blocksToHtmls(this.textBlocks)
+        console.log(this.htmlBlocks)
         return this.htmlBlocks
     }
     paste(ja, blockIndex) { // ペーストした箇所だけパースする（負荷軽減）
@@ -45,11 +47,14 @@ class JavelParser {
     //#blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
     #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(this.#inline(block.slice(2)).flat()) : p(block.split(/\n/).filter(v=>v).map(line=>[this.#inline(line).flat(), br()]).flat().slice(0, -1))) }
     #inline(text) {
+        console.log(text)
         const matches = EmRuby.matches(text)
+        if (0===matches.length) { return [span({class:'text-node'},text)] }
         console.log(matches)
         const spans = []
         let start = 0
         for (let i=0; i<matches.length; i++) {
+            if (0 === matches[i].index) { start = matches[i].length; continue }
             const length = matches[i].index
             if (start === length) continue
             //spans.push({index:start, length:length, html:span(class:'text-node', text.slice(start, length))})
@@ -66,12 +71,12 @@ class JavelParser {
 class EmRuby {
     static matches(text) { // 漢字《かんじ》, ｜あいうえお《アイウエオ》
         if (!(text.includes('《') && text.includes('》'))) { return [] }
-//        console.log('Em:', Em.matches(text).flat().map(m=>m.innerText))
-//        console.log('Ruby.Long:', Ruby.matchesLong(text).flat().map(m=>m.innerText))
-//        console.log('Ruby.Short:', Ruby.matchesShort(text).flat().map(m=>m.innerText))
-        console.log('Em:', Em.matches(text).map(m=>m.html.outerHTML))
-        console.log('Ruby.Long:', Ruby.matchesLong(text).map(m=>m.html.outerHTML))
-        console.log('Ruby.Short:', Ruby.matchesShort(text).map(m=>m.html.outerHTML))
+//        console.log('Em:', Em.matches(text).map(m=>m.html.outerHTML))
+//        console.log('Ruby.Long:', Ruby.matchesLong(text).map(m=>m.html.outerHTML))
+//        console.log('Ruby.Short:', Ruby.matchesShort(text).map(m=>m.html.outerHTML))
+        console.log('Em:', Em.matches(text))
+        console.log('Ruby.Long:', Ruby.matchesLong(text))
+        console.log('Ruby.Short:', Ruby.matchesShort(text))
         const matches = [...Em.matches(text), ...Ruby.matchesLong(text), ...Ruby.matchesShort(text)].flat()
         return matches.sort((a,b)=>a.index - b.index)
     }

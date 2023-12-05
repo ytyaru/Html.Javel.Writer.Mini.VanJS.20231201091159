@@ -1,5 +1,5 @@
 <style>
-:root { --font-size:max(16px, calc(100vw / 42)); --font-family-serif:}
+:root { --font-size:max(16px, calc(100vw / 42)); --em-style:filled sesame; --em-color:#000000;}
 body {
     overflow-x:hidden;
     overflow-y:hidden;
@@ -15,6 +15,11 @@ body, textarea {
 }
 button { user-select:none; }
 h1 { font-family: 'Noto Sans JP', 'Source Han Sans JP', 'Noto Color Emoji', sans-serif; }
+em {
+    font-style: normal; /* 非イタリック化 */
+    text-emphasis: var(--em-style) var(--em-color);
+    -webkit-text-emphasis: var(--em-style) var(--em-color);
+}
 </style>
 <script type="text/javascript" src="util/string/length.js"></script>
 <script type="text/javascript" src="../lib/van/1.2.6/nomodule.min.js"></script>
