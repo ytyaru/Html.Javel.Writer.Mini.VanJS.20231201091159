@@ -157,7 +157,8 @@ class TextInput {
         //const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + '\n\n' + nextBlockText)
         //const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + ((blockBack===nextBlockText) ? '' : '\n\n' + nextBlockText))
         //const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + ((blockBack.trimLine()===nextBlockText) ? '' : '\n\n' + nextBlockText))
-        const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText))
+        //const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText))
+        const pasteBlocks = TextBlock.fromLines(((blockFront + pasteText + blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText)).split(/\r?\n/))
         console.log(pasteBlocks)
         this.htmlViewer._htmls.val = [...this.htmlViewer.parser.pasteBlocks(index, pasteBlocks)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
         /*
