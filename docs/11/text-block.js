@@ -5,11 +5,14 @@ class TextBlock {
         const [blocks, block] = [[], []]
         for (let line of lines) {
             block.push(line)
-            if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
+            //if (''===line && 0 < block.length) { blocks.push(block.join('\n')); block.splice(0); }
+            if (''===line && 0 < block.length) { blocks.push(block.join('\n').trimLine()); block.splice(0); }
         }
-        if (0 < block.length) { blocks.push(block.join('\n')) }
+        //if (0 < block.length) { blocks.push(block.join('\n')) }
+        if (0 < block.length) { blocks.push(block.join('\n').trimLine()) }
         return blocks.filter(v=>v)
     }
+    //static #textToLines(text) { return text.trim().split(/\r?\n/) }
     static #textToLines(text) { return text.trim().split(/\r?\n/) }
     static selectedIndex(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[0] } 
     static selectedText(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[1] } 

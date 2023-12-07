@@ -30,6 +30,8 @@ class JavelParser {
         console.log('pasteBlocks():', index, blocks, deleteCount)
         this.textBlocks.splice(index, deleteCount, ...blocks)
         this.htmlBlocks.splice(index, deleteCount, ...this.#blocksToHtmls(blocks))
+        console.log(this.textBlocks)
+        console.log(this.htmlBlocks)
         return this.htmlBlocks
     }
     insertBlocks(index, blocks, deleteCount=0) {

@@ -33,9 +33,71 @@ class TextInput {
         }
         */
 
+        // カットした結果、ブロック用改行が削除されてブロック同士が結合してしまう場合がある。なので最初にカットしたブロックとその次のブロックそれぞれのテキストを取得しておく。それらを結合し、カット範囲内を削除したテキストをTextBlock.fromText()した結果を挿入する
+        const [index, block] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        console.log(index, block)
+        //console.log()
+        const nextBlockText = (index+1<this.htmlViewer.parser.textBlocks.length) ? this.htmlViewer.parser.textBlocks[index+1] : ''
+        console.log('nextBlockText:', nextBlockText)
+        //const text = (block + '\n\n' + nextBlockText)
+        const text = e.target.value
+        const textFront = text.slice(0, e.target.selectionStart)
+        const textBack = text.slice(e.target.selectionEnd)
+        console.log(text)
+        console.log(textFront)
+        console.log(textBack)
+        const blockFront = textFront.slice((-1===textFront.lastIndexOf('\n\n')) ? 0 : textFront.lastIndexOf('\n\n')+2)
+        const blockBack = textBack.slice(0, (-1===textBack.indexOf('\n\n')) ? 0 : textBack.indexOf('\n\n'))
+        console.log('blockFront:', blockFront)
+        console.log('blockBack:', blockBack)
+        //const blocks = TextBlock.fromText(textFront+textBack)
+        //const blocks = TextBlock.fromText(blockFront+blockBack)
+        //const blocks = TextBlock.fromText((blockFront+blockBack)+'\n\n'+nextBlockText)
+        console.log('blockBack.trimLine():', blockBack.trimLine())
+        console.log('nextBlockText:', nextBlockText)
+        console.log((blockBack.trimLine()==nextBlockText)) // trueのはず
+        console.log(((blockBack.trimLine())===nextBlockText))
+        console.log(((blockBack.trimLine())==nextBlockText))
+        console.log(this.htmlViewer.parser.textBlocks[index+1]===nextBlockText)
+        console.log(nextBlockText===nextBlockText)
+        console.log(blockBack===blockBack)
+        console.log(blockBack.trimLine()===blockBack.trimLine())
+        console.log(blockBack===blockBack.trimLine())
+        console.log(blockBack.trim()===blockBack.trimLine())
+
+        console.log(blockBack.trimLine().length, nextBlockText.length)
+        console.log(blockBack.trimLine().length, nextBlockText.trimLine().length)
+        for (let i=0; i<blockBack.trimLine().length; i++) {
+            if (blockBack.trimLine()[i]!==nextBlockText[i]) {
+                console.warn(i, blockBack.trimLine()[i], nextBlockText[i])
+            }
+        }
+
+        //const blocks = TextBlock.fromText((blockFront+blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText))
+        //const blocks = TextBlock.fromLines(((blockFront+blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText)).trimLine().split(/\r?\n/))
+//        const cutText = text.slice(e.target.selectionStart, e.target.selectionEnd)
+        //const blocks = TextBlock.fromLines(((blockFront+blockBack) + ((!(cutText.includes('\n\n'))) ? '' : '\n\n' + nextBlockText)).trimLine().split(/\r?\n/))
+        //const blocks = TextBlock.fromLines((blockFront+blockBack).trimLine().split(/\r?\n/))
+        const cutText = text.slice(e.target.selectionStart, e.target.selectionEnd+1)
+        console.log(cutText)
+        console.log(cutText.endsWith('\n'))
+//        const deleteCount = (cutText.endsWith('\n')) ? 3 : 2
+        //const blocks = TextBlock.fromLines((blockFront+blockBack+((cutText.includes('\n\n') ? '\n\n'+nextBlockText : ''))).trimLine().split(/\r?\n/))
+        //const insertText = (blockFront+blockBack+((cutText.endsWith('\n') ? '\n\n'+nextBlockText : ''))).trimLine()
+        const insertText = (blockFront+blockBack+((cutText.endsWith('\n') ? '' : '\n\n'+nextBlockText))).trimLine()
+        console.log(insertText)
+        //const blocks = TextBlock.fromLines((blockFront+blockBack+((cutText.endsWith('\n') ? '\n\n'+nextBlockText : ''))).trimLine().split(/\r?\n/))
+        const blocks = TextBlock.fromLines(insertText.split(/\r?\n/))
+        //const blocks = TextBlock.fromLines((blockFront+blockBack+'\n\n'+nextBlockText).trimLine().split(/\r?\n/))
+        console.log(blocks)
+        this.htmlViewer._htmls.val = [...this.htmlViewer.parser.pasteBlocks(index, blocks)]
+        //this.htmlViewer._htmls.val = [...this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)]
+        this.isCut = true
+
+        /*
         //const [index, block] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
         const [index, _] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
-        console.log(block)
+        //console.log(block)
         const cutText = window.getSelection().toString()
         console.log(cutText)
         const cutCount = TextBlock.count(cutText)
@@ -53,6 +115,7 @@ class TextInput {
 
         }, 0);
         this.isCut = true
+        */
     }
     #getClipboardText(e) {
         if (e.clipboardData && e.clipboardData.getData) { return e.clipboardData.getData('text/plain') } // 他
@@ -63,7 +126,7 @@ class TextInput {
         console.log('PASTE !!!!!!!!!')
         console.log(e.target.selectionStart, e.target.selectionEnd)
         const [index, _] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
-
+        console.log(`index: ${index}`)
 
         // ペースト位置のブロックと、その次のブロックの範囲のテキストを取得する。それらとペーストするテキストを結合してTextBlock.fromText()でブロック配列にして挿入する。これによって面倒な改行によるブロックの上書きや挿入といった個別判定が不要になる。
         const text = e.target.value
@@ -73,16 +136,28 @@ class TextInput {
         console.log(textBack)
 
         const pasteText = this.#getClipboardText(e)
-        console.log(pasteText, (pasteText.match(/[\n]/g) || []).length)
+        console.log('pasteText:', pasteText, (pasteText.match(/[\n]/g) || []).length)
 //        const pasteBlocks = TextBlock.fromText(pasteText)
         const blockFront = textFront.slice((-1===textFront.lastIndexOf('\n\n')) ? 0 : textFront.lastIndexOf('\n\n')+2)
         const blockBack = textBack.slice(0, (-1===textBack.indexOf('\n\n')) ? 0 : textBack.indexOf('\n\n'))
-        console.log(blockFront)
-        console.log(blockBack)
+        console.log('blockFront:', blockFront)
+        console.log('blockBack:', blockBack)
+        console.log('blockBack.trimLine():', blockBack.trimLine())
 
         const nextBlockText = (index+1<this.htmlViewer.parser.textBlocks.length) ? this.htmlViewer.parser.textBlocks[index+1] : ''
-
-        const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + '\n\n' + nextBlockText)
+        console.log('nextBlockText:', nextBlockText)
+        
+        console.log('blockBack===nextBlockText:', blockBack===nextBlockText)
+        console.log('blockBack.trimLine()===nextBlockText:', blockBack.trimLine()===nextBlockText)
+        console.log('blockBack.trimLine()==nextBlockText:', blockBack.trimLine()==nextBlockText)
+        console.log((blockFront + pasteText + blockBack) + '\n\n' + nextBlockText)
+        console.log((blockFront + pasteText + blockBack) + ((blockBack===nextBlockText) ? '' : '\n\n' + nextBlockText))
+        console.log((blockFront + pasteText + blockBack) + ((blockBack.trimLine()===nextBlockText) ? '' : '\n\n' + nextBlockText))
+        console.log((blockFront + pasteText + blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText))
+        //const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + '\n\n' + nextBlockText)
+        //const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + ((blockBack===nextBlockText) ? '' : '\n\n' + nextBlockText))
+        //const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + ((blockBack.trimLine()===nextBlockText) ? '' : '\n\n' + nextBlockText))
+        const pasteBlocks = TextBlock.fromText((blockFront + pasteText + blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText))
         console.log(pasteBlocks)
         this.htmlViewer._htmls.val = [...this.htmlViewer.parser.pasteBlocks(index, pasteBlocks)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
         /*
