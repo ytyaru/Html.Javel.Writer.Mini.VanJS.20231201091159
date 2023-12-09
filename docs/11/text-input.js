@@ -1,7 +1,7 @@
 (function(){
 const { textarea } = van.tags
 class TextInput {
-    constructor(htmlViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.isComposing=false; this.isCut=false; }
+    constructor(htmlViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; }
     get element() { return textarea({id:this.id, placeholder:'原稿', style:()=>`box-sizing:border-box;`,
         oninput:(e)=>this.#onInput(e),
         oncut:(e)=>this.#onCut(e),
@@ -13,6 +13,7 @@ class TextInput {
         console.log('INPUT !!!!!!!!!')
         if (this.#isComposing(e)) { return }
         if (this.isCut) { this.isCut=false; return; }
+        if (this.isPaste) { this.isCut=false; return; }
         console.log(e)
         //this.htmlViewer.ja.val = e.target.value
         this.#parse(e)
@@ -161,6 +162,7 @@ class TextInput {
         const pasteBlocks = TextBlock.fromLines(((blockFront + pasteText + blockBack) + ((blockBack.trimLine()==nextBlockText) ? '' : '\n\n' + nextBlockText)).split(/\r?\n/))
         console.log(pasteBlocks)
         this.htmlViewer._htmls.val = [...this.htmlViewer.parser.pasteBlocks(index, pasteBlocks)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
+        this.isPaste = true
         /*
         if (-1 === pasteText.indexOf('\n\n')) {
 

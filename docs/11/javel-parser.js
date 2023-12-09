@@ -12,6 +12,7 @@ class JavelParser {
         return this.htmlBlocks
     }
     setBlockText(blockIndex, ja) {
+        console.log('setBlockText() *****************************')
         console.log(blockIndex, ja)
         console.log(this.textBlocks)
         this.textBlocks[blockIndex] = ja
@@ -35,6 +36,7 @@ class JavelParser {
 //        this.textBlocks = this.textBlocks.flat()
 //        this.htmlBlocks.splice(index, deleteCount, ...this.#blocksToHtmls(blocks))
         //console.log(this.textBlocks.toSpliced(index, deleteCount))
+        //this.textBlocks.splice(index, deleteCount, ...[...blocks])
         this.textBlocks.splice(index, deleteCount, ...blocks)
         this.htmlBlocks.splice(index, deleteCount, ...this.#blocksToHtmls(blocks))
         console.log(this.textBlocks)
