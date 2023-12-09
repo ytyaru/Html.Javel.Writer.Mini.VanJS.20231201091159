@@ -16,6 +16,19 @@ class TextBlock {
     static #textToLines(text) { return text.trim().split(/\r?\n/) }
     static selectedIndex(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[0] } 
     static selectedText(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[1] } 
+    static selected(selectionStart, selectionEnd, text) {
+        // テキストブロック・インデックス取得
+        const textFront = text.slice(0, selectionStart)
+        const textBack = text.slice(selectionEnd)
+        const selectedBlockIndex = this.count(textFront)-1
+        // キャレット位置のブロックテキスト取得
+        const blockStart = textFront.lastIndexOf('\n\n')
+        const blockEnd = textBack.indexOf('\n\n')
+        console.log(blockStart, blockEnd+textFront.length)
+        const block = text.slice(((-1<blockStart) ? blockStart+2 : 0), (-1<blockEnd) ? blockEnd+textFront.length : text.length)
+        return [selectedBlockIndex, block]
+    }
+    /*
     static selected(selectionEnd, text) {
         // テキストブロック・インデックス取得
         const textBefore = text.slice(0, selectionEnd) // キャレット位置より前
@@ -30,6 +43,7 @@ class TextBlock {
         const block = text.slice(((-1<blockStart) ? blockStart+2 : 0), (-1<blockEnd) ? blockEnd+textBefore.length : text.length)
         return [selectedBlockIndex, block]
     }
+    */
     static count(text) { return (text.match(/[\n]{2,}/g) || []).length + 1 } // text内にあるブロック数
 
     static cutBlocks(block, selectionStart, selectionEnd) {

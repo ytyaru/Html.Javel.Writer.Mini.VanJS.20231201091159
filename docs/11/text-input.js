@@ -35,7 +35,9 @@ class TextInput {
         */
 
         // カットした結果、ブロック用改行が削除されてブロック同士が結合してしまう場合がある。なので最初にカットしたブロックとその次のブロックそれぞれのテキストを取得しておく。それらを結合し、カット範囲内を削除したテキストをTextBlock.fromText()した結果を挿入する
-        const [index, block] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        //const [index, block] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim())
+        //if ('\n\n'===e.target.value.slice(e.target.selectionStart, e.target.selectionEnd)) { index-- }
         console.log(index, block)
         //console.log()
         const nextBlockText = (index+1<this.htmlViewer.parser.textBlocks.length) ? this.htmlViewer.parser.textBlocks[index+1] : ''
@@ -79,7 +81,8 @@ class TextInput {
 //        const cutText = text.slice(e.target.selectionStart, e.target.selectionEnd)
         //const blocks = TextBlock.fromLines(((blockFront+blockBack) + ((!(cutText.includes('\n\n'))) ? '' : '\n\n' + nextBlockText)).trimLine().split(/\r?\n/))
         //const blocks = TextBlock.fromLines((blockFront+blockBack).trimLine().split(/\r?\n/))
-        const cutText = text.slice(e.target.selectionStart, e.target.selectionEnd+1)
+        //const cutText = text.slice(e.target.selectionStart, e.target.selectionEnd+1)
+        const cutText = text.slice(e.target.selectionStart, e.target.selectionEnd)
         console.log(cutText)
         console.log(cutText.endsWith('\n'))
 //        const deleteCount = (cutText.endsWith('\n')) ? 3 : 2
@@ -126,7 +129,8 @@ class TextInput {
     #onPaste(e) {
         console.log('PASTE !!!!!!!!!')
         console.log(e.target.selectionStart, e.target.selectionEnd)
-        const [index, _] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        //const [index, _] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        const [index, _] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim())
         console.log(`index: ${index}`)
 
         // ペースト位置のブロックと、その次のブロックの範囲のテキストを取得する。それらとペーストするテキストを結合してTextBlock.fromText()でブロック配列にして挿入する。これによって面倒な改行によるブロックの上書きや挿入といった個別判定が不要になる。
@@ -219,7 +223,8 @@ class TextInput {
         console.log(e.target.selectionStart)
         console.log(e.target.selectionEnd)
 
-        const [index, block] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        //const [index, block] = TextBlock.selected(e.target.selectionEnd, e.target.value.trim())
+        const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim())
         this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
 //        this.htmlViewer.parser.setBlockText(index, block)
 //        this.htmlViewer._htmls.val = [...this.htmlViewer._htmls.val] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
