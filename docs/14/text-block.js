@@ -70,6 +70,7 @@ class TextBlock {
         return [index, pasteBlocks]
 //        return [index, pasteBlocks, (isCutBlock) ? 1 : 2]
 //        return [index, pasteBlocks, (cutText.includes('\n\n')) ? 2 : 2]
+        return [index, pasteBlocks, ((textFront.endsWith('\n') && textBack.startsWith('\n')) ? 1 : 2)]
     }
     static pasteBlocks(selectionStart, selectionEnd, pasteText, text, blocks) {
         const [index, _] = this.selected(selectionStart, selectionEnd, text)
