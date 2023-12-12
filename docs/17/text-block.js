@@ -38,19 +38,44 @@ class TextBlock {
         const [index, block] = this.selected(selectionStart, selectionEnd, text)
         const deleteCount = cutInnerBlockCount + 1 + this.#deleteCount(cutText, textFront, textBack)
         //const pasteBlocks = this.fromLines((blockFront + blockBack).split(/\r?\n/))
-        const pasteBlocks = this.fromLines((blockFront + ((cutText.endsWith('\n') && textBack.startsWith('\n')) ? '' : blockBack)).split(/\r?\n/))
+        //const pasteBlocks = this.fromLines((blockFront + ((cutText.endsWith('\n') && textBack.startsWith('\n')) ? '' : blockBack)).split(/\r?\n/))
+        //const pasteBlocks = this.fromLines((blockFront + ((cutText.endsWith('\n') && textBack.startsWith('\n') || (cutText.startsWith('\n') && textFront.endsWith('\n'))) ? '' : blockBack)).split(/\r?\n/))
+        const nextBlockText = (index<blocks.length) ? blocks[index+1] : ''
+        const blockEndText = this.#blockBack(cutText, textFront, textBack, blockBack, nextBlockText)
+        const pasteBlocks = this.fromLines((blockFront + blockEndText).split(/\r?\n/))
         console.debug('textFront:', textFront)
         console.debug('textBack:', textBack)
         console.debug('blockFront:', blockFront)
         console.debug('blockBack:', blockBack)
         console.debug('blockBack.trimLine():', blockBack.trimLine())
         console.debug(`cutText: ${(cutText.match(/^[\n]{2,}/g) || []).length} : ${(cutText.match(/[\n]{2,}$/g) || []).length} : ${cutText}`)
+        console.debug(`cutInnerBlockCount: ${cutInnerBlockCount}`)
+        console.debug(`cutText.trimLine(): ${cutText.trimLine()}`)
+        console.debug(`(cutText.match(/[\n]/g) | []).length: ${(cutText.match(/[\n]/g) || []).length}`)
+        console.debug(`(cutText.match(/[\n]/g) | []).length: ${(cutText.match(/[\n]/g) || []).length}`)
+        console.debug(`((cutText.match(/[\n]/g) | []).length)/2: ${((cutText.match(/[\n]/g) || []).length)/2}`)
+        console.debug(`Math.ceil(((cutText.match(/[\n]/g) | []).length)/2): ${Math.ceil(((cutText.match(/[\n]/g) || []).length)/2)}`)
+        
+        console.log('blockEndText:', blockEndText)
+        console.log('blockBack.trimLine()==nextBlockText:', blockBack.trimLine()==nextBlockText)
         console.log(index, deleteCount, pasteBlocks)
         return [index, pasteBlocks, deleteCount]
+    }
+    static #blockBack(cutText, textFront, textBack, blockBack, nextBlockText) {
+        if (cutText.startsWith('\n') && cutText.endsWith('\n') && textFront.endsWith('\n') && textBack.startsWith('\n')) { return '' } // cutText先頭末尾\n含むとき''を返したい
+        //if (cutText.endsWith('\n') && textBack.startsWith('\n')) { return '' }
+        if (cutText.endsWith('\n') && textBack.startsWith('\n')) { return blockBack } // cutText先頭末尾\n含むとき''を返したい
+        //if (cutText.startsWith('\n') && textFront.endsWith('\n')) { return '' }
+        if (cutText.startsWith('\n') && textFront.endsWith('\n')) { return blockBack }
+        if (cutText.endsWith('\n\n')) { return blockBack }
+        if (blockBack.trimLine()==nextBlockText) { return '' }
+        return blockBack
+//((cutText.endsWith('\n') && textBack.startsWith('\n') || (cutText.startsWith('\n') && textFront.endsWith('\n'))) ? '' : blockBack))
     }
     static #deleteCount(cutText, textFront, textBack) {
         if (cutText.startsWith('\n') && textFront.endsWith('\n')) { return 1 }
         if (cutText.endsWith('\n') && textBack.startsWith('\n')) { return 1 }
+        if (cutText.endsWith('\n\n')) { return 1 }
         return 0
     }
     /*
