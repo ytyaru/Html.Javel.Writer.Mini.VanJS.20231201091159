@@ -10,7 +10,8 @@ class TextBlock {
         if (0 < block.length) { blocks.push(block.join('\n').trimLine()) }
         return blocks.filter(v=>v)
     }
-    static #textToLines(text) { return text.trim().split(/\r?\n/) }
+    //static #textToLines(text) { return text.trim().split(/\r?\n/) }
+    static #textToLines(text) { return text.trimLine().split(/\r?\n/) }
     static selectedIndex(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[0] } 
     static selectedText(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[1] } 
     static selected(selectionStart, selectionEnd, text) {

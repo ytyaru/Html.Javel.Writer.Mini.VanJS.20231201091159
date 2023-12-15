@@ -85,6 +85,10 @@ class TextInput {
         const start = e.target.selectionStart
         const end = e.target.selectionEnd
         let updateText = text
+        console.log('start:', start)
+        console.log('end:', end)
+        console.log('selectedText:', text.slice(start, end))
+        console.log('text:', text)
         if (this.#isSelected(e)) { // 範囲選択あり
             console.log('範囲選択あり')
             const inputedText = e.target.value.insert(e.target.selectionStart, e.data)
