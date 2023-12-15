@@ -64,7 +64,16 @@ class JavelParser {
     }
     */
     //#blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
-    #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(this.#inline(block.slice(2)).flat()) : p(block.split(/\n/).filter(v=>v).map(line=>[this.#inline(line).flat(), br()]).flat().slice(0, -1))) }
+    //#blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(this.#inline(block.slice(2)).flat()) : p(block.split(/\n/).filter(v=>v).map(line=>[this.#inline(line).flat(), br()]).flat().slice(0, -1))) }
+    #blocksToHtmls(blocks) {
+        //console.log('#blocksToHtmls():', blocks.map(block=>(block.startsWith('# ')) ? '' : block.split(/\n/)))
+        //console.log('#blocksToHtmls():', blocks.map(block=>(block.startsWith('# ')) ? '' : block.split(/\n/)).filter(v=>v))
+        //console.log('#blocksToHtmls():', blocks.map(block=>(block.startsWith('# ')) ? '' : block.split(/\n/)).filter(v=>v).map(line=>line))
+        //console.log('#blocksToHtmls():', blocks.map(block=>(block.startsWith('# ')) ? '' : block.split(/\n/)).filter(v=>v).map(line=>this.#inline(line)))
+        //console.log('#blocksToHtmls():', blocks.map(block=>(block.startsWith('# ')) ? '' : block.split(/\n/)).filter(v=>v).map(line=>this.#inline(line).flat()))
+        console.log('#blocksToHtmls():', blocks.map(block=>(block.startsWith('# ')) ? '' : block.split(/\n/)).filter(v=>v).map(line=>this.#inline(line).flat()).flat())
+        return blocks.map(block=>(block.startsWith('# ')) ? h1(this.#inline(block.slice(2)).flat()) : p(block.split(/\n/).filter(v=>v).map(line=>[this.#inline(line).flat(), br()]).flat().slice(0, -1)))
+    }
     #inline(text) {
         console.debug(text)
         const matches = EmRuby.matches(text)
@@ -80,6 +89,7 @@ class JavelParser {
             spans.push({index:start, length:length, html:span({class:'text-node'}, text.slice(start, length))})
             start = matches[i].index + matches[i].length
         }
+        if (start < text.length-1) { spans.push({index:start, length:text.length, html:span({class:'text-node'}, text.slice(start, text.length))}) }
         matches.push(spans)
         console.debug(matches.flat().sort((a,b)=>a.index - b.index))
         console.debug(matches.flat().sort((a,b)=>a.index - b.index).map(m=>m.html))

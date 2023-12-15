@@ -14,17 +14,22 @@ class TextBlock {
     static selectedIndex(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[0] } 
     static selectedText(selectionEnd, text) { return this.selectedIndexBlock(selectionEnd, text)[1] } 
     static selected(selectionStart, selectionEnd, text) {
+        if (!text.includes('\n\n')) { return [0, text] }
         // テキストブロック・インデックス取得
         const textFront = text.slice(0, selectionStart)
+        if (!textFront.includes('\n\n')) { return [0, text.slice(0, text.indexOf('\n\n'))] }
         const textBack = text.slice(selectionEnd)
         const selectedBlockIndex = this.count(textFront)-1
         // キャレット位置のブロックテキスト取得
         const blockStart = textFront.lastIndexOf('\n\n')
         const blockEnd = textBack.indexOf('\n\n')
         console.debug(blockStart, blockEnd+textFront.length)
+        console.debug('textFront:', textFront)
+        console.debug('textBack:', textBack)
         if (-1 === blockStart) { return [0, textFront] }
         if (-1 === blockEnd) { return [this.count(text)-1, textBack] }
         const block = text.slice((blockStart+2), blockEnd+textFront.length)
+        console.debug(selectedBlockIndex, block)
         return [selectedBlockIndex, block]
     }
     static count(text) { return (text.match(/[\n]{2,}/g) || []).length + 1 } // text内にあるブロック数

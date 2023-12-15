@@ -73,7 +73,6 @@ class TextInput {
         this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
 
     }
-    insert(i, s)
     #input(e) {
         // 選択範囲があり押下キーがDelete/BkSpであるなら、選択範囲が含まれるブロックを更新する
         // 選択範囲があり押下キーがDelete/BkSpでないなら、選択範囲が含まれるブロックを更新する
@@ -81,7 +80,13 @@ class TextInput {
         // 選択範囲がなく押下キーがDelete/BkSpでないなら、現在ブロックを更新する
         // 選択範囲がなく押下キーがDelete/BkSpであり対象文字がブロック分断用改行コードなら、前後ブロックを更新する
         // 選択範囲がなく押下キーがDelete/BkSpであり対象文字がブロック分断用改行コード以外なら、現在ブロックを更新する
+
+        const text = e.target.value
+        const start = e.target.selectionStart
+        const end = e.target.selectionEnd
+        let updateText = text
         if (this.#isSelected(e)) { // 範囲選択あり
+            console.log('範囲選択あり')
             const inputedText = e.target.value.insert(e.target.selectionStart, e.data)
             console.log('inputedText:', inputedText)
             const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
@@ -100,12 +105,15 @@ class TextInput {
             }
             */
         } else { // 範囲選択なし
-            if (#isDeleteKey(e)) {
+            console.log('範囲選択なし')
+            if (this.#isDeleteKey(e)) {
+                console.log('BkSp|Del押下')
                 // 何もしない
                 if (0===start && 'deleteContentBackward'===e.inputType) { return } // 先頭でBkSp
                 if (e.target.value.length-1===end&& 'deleteContentForward'===e.inputType) { return } // 末尾でDel
                 // 対象文字がブロック分断用改行コードなら、前後ブロックを更新する
                 if (this.#isDeleteBlockNewline(e)) {
+                    console.log('対象文字がブロック分断用改行コードなら、前後ブロックを更新する')
                     const delTxt = this.#deletedText(e)
                     const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, delTxt, this.htmlViewer.parser.textBlocks)
                     console.log(index, deleteCount, blocks)
@@ -113,6 +121,14 @@ class TextInput {
                     return
                 }
                 // 対象文字がブロック分断用改行コード以外なら、現在ブロックを更新する
+                //else { updateText = e.target.value.remove(e.target.selectionStart-(('deleteContentBackward'===e.inputType) ? 1 : 0)) }
+                /*
+                else {
+                    //updateText = e.target.value.remove(e.target.selectionStart-(('deleteContentBackward'===e.inputType) ? 1 : 0))
+                    updateText = e.target.value
+                    console.log('updateText:', e.target.selectionStart-(('deleteContentBackward'===e.inputType) ? 1 : 0), updateText)
+                }
+                */
             }
             // 選択範囲がなく押下キーがDelete/BkSpでないなら、現在ブロックを更新する
             /*
@@ -122,9 +138,12 @@ class TextInput {
                 this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
             }
             */
+            console.log('同一ブロック内修正')
             // 同一ブロック内修正
-            const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim())
+            const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value)
             this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
+//            const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, updateText)
+//            this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
         }
         //const isSelected = (e.target.selectionStart !== e.target.selectionEnd)
         //const selectedText = e.target.value.slice(e.target.selectionStart, e.target.selectionEnd)
@@ -152,13 +171,27 @@ class TextInput {
     #getDeleteChar(e) {
         switch (e.inputType) {
             case 'deleteContentBackward': return ((e.target.selectionStart < 1) ? '' : e.target.value.slice(e.target.selectionStart-1, e.target.selectionStart)); // BkSp
-            case 'deleteContentForward': return (e.target.value.length-1 <= e.target.selectionEnd) ? '' : e.target.value.slice(e.target.selectionEnd+1, e.target.selectionEnd+2); // DELETE
+            case 'deleteContentForward': return (e.target.value.length-1 <= e.target.selectionEnd) ? '' : e.target.value.slice(e.target.selectionEnd, e.target.selectionEnd+1); // DELETE
+            //case 'deleteContentForward': return (e.target.value.length-1 <= e.target.selectionEnd) ? '' : e.target.value.slice(e.target.selectionEnd+1, e.target.selectionEnd+2); // DELETE
         }
         return e.target.value.slice(e.target.selectionStart, e.target.selectionEnd)
         //throw new Error('この関数は削除時に使う想定です。')
     }
     #isDeleteBlockNewline(e) {
+        console.log('#isDeleteBlockNewline():', this.#getDeleteChar(e))
         if ('\n'===this.#getDeleteChar(e)) {
+            console.log('削除対象は改行コードです。')
+            switch (e.inputType) {
+                case 'deleteContentBackward': // BkSp
+                case 'deleteContentForward': // DELETE
+                    const [now, prev, next] = this.#getDelChars(e)
+                    if ('\n'===now || [prev, next].some(c=>'\n'===c)) { return true }
+                    return false
+                default: return false
+            }
+        }
+        return false
+        /*
             switch (e.inputType) {
                 case 'deleteContentBackward': // BkSp
                     const now = e.target.value.slice(e.target.selectionStart-1, e.target.selectionStart)
@@ -174,13 +207,25 @@ class TextInput {
                     return false
                 default: return false
             }
-        }
-        return false
 
         switch (e.inputType) {
             case 'deleteContentBackward': return (('\n'===e.target.value.slice(e.target.selectionStart-1, e.target.selectionStart)) && ('\n'===e.target.value.slice(e.target.selectionEnd+1, e.target.selectionEnd+2))); // BkSp
             case 'deleteContentForward': return true; // DELETE
             default: return false
+        }
+        */
+    }
+    #getDelChars(e) { // return [now, prev, next]
+        switch (e.inputType) {
+            case 'deleteContentBackward': // BkSp
+                return [e.target.value.slice(e.target.selectionStart-1, e.target.selectionStart),
+                        e.target.value.slice(e.target.selectionStart-2, e.target.selectionStart+1),
+                        e.target.value.slice(e.target.selectionEnd, e.target.selectionEnd+1)]
+            case 'deleteContentForward': // DELETE
+                return [e.target.value.slice(e.target.selectionStart, e.target.selectionEnd+1),
+                e.target.value.slice(e.target.selectionStart-1, e.target.selectionStart),
+                e.target.value.slice(e.target.selectionEnd+1, e.target.selectionEnd+2)]
+            default: throw new Error('#getDelChars()はBkSpかDelキー押下時に使うことを想定したメソッドです。')
         }
     }
     setup() {
