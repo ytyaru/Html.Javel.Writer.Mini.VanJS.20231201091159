@@ -1,12 +1,13 @@
 (function(){
 const { textarea } = van.tags
 class TextInput {
-    constructor(htmlViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; }
+    constructor(htmlViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; this.selectedText=null; this.isSelectedEdit=false;}
     get element() { return textarea({id:this.id, placeholder:'原稿', style:()=>`box-sizing:border-box;`,
         oninput:(e)=>this.#onInput(e),
         oncut:(e)=>this.#onCut(e),
         onpaste:(e)=>this.#onPaste(e),
-        oncompositionend:(e)=>this.htmlViewer.ja.val = e.target.value},
+        oncompositionend:(e)=>this.htmlViewer.ja.val = e.target.value,
+        onkeydown:(e)=>this.#onKeydown(e)},
         this.htmlViewer.ja.val)
     }
     #onInput(e) {
@@ -14,6 +15,7 @@ class TextInput {
         if (this.#isComposing(e)) { return }
         if (this.isCut) { this.isCut=false; return; }
         if (this.isPaste) { this.isCut=false; return; }
+        if (this.isSelectedEdit) { this.isSelectedEdit=false; return; }
         console.log(e)
         //this.#parseBlock(e)
         this.#input(e)
@@ -53,6 +55,27 @@ class TextInput {
         }
     }
     #compositionEnd(e) { this.#parseBlock(e) }
+    #onKeydown(e) {
+        const [text, start, end] = [e.target.value, e.target.selectionStart, e.target.selectionEnd]
+        //this.selectedText = text.slice(start, end)
+        this.selectedText = text.slice(start, end)
+        console.log('selectedText:', this.selectedText)
+        const isSelected = (0 < this.selectedText.length)
+        //this.selected.text = text.slice(start, end)
+        //this.selected.is = (0 < selectedText.length)
+        switch (e.key) {
+            case 'Delete':
+            case 'Backspace':
+            case 'Enter':
+                if (!isSelected) { return }
+                const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, ('Enter'===e.key) ? e.target.value.insert(end, '\n') : e.target.value, this.htmlViewer.parser.textBlocks)
+                console.log(index, deleteCount, blocks)
+                this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                this.isSelectedEdit = true
+                break
+            default: break
+        }
+    }
     #parseBlock(e) {
         console.log(window.getSelection())
         console.log(window.getSelection().anchorNode)
@@ -89,6 +112,30 @@ class TextInput {
         console.log('end:', end)
         console.log('selectedText:', text.slice(start, end))
         console.log('text:', text)
+        console.log('範囲選択なし')
+        if (this.#isDeleteKey(e)) {
+            console.log('BkSp|Del押下')
+            // 何もしない
+            if (0===start && 'deleteContentBackward'===e.inputType) { return } // 先頭でBkSp
+            if (e.target.value.length-1===end&& 'deleteContentForward'===e.inputType) { return } // 末尾でDel
+            // 対象文字がブロック分断用改行コードなら、前後ブロックを更新する
+            if (this.#isDeleteBlockNewline(e)) {
+                console.log('対象文字がブロック分断用改行コードなら、前後ブロックを更新する')
+                const delTxt = this.#deletedText(e)
+                const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, delTxt, this.htmlViewer.parser.textBlocks)
+                console.log(index, deleteCount, blocks)
+                this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                return
+            }
+            // 対象文字がブロック分断用改行コード以外なら、現在ブロックを更新する
+        }
+        // 選択範囲がなく押下キーがDelete/BkSpでないなら、現在ブロックを更新する
+        console.log('同一ブロック内修正')
+        // 同一ブロック内修正
+        const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value)
+        this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
+
+        /*
         if (this.#isSelected(e)) { // 範囲選択あり
             console.log('範囲選択あり')
             const inputedText = e.target.value.insert(e.target.selectionStart, e.data)
@@ -96,18 +143,6 @@ class TextInput {
             const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
             console.log(index, deleteCount, blocks)
             this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
-            /*
-            switch(e.inputType) {
-                case 'deleteContentBackward': // BkSp
-                case 'deleteContentForward': // DELETE
-                    const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
-                    console.log(index, deleteCount, blocks)
-                    this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
-                    break
-                default: // 他（insertText）
-                    break
-            }
-            */
         } else { // 範囲選択なし
             console.log('範囲選択なし')
             if (this.#isDeleteKey(e)) {
@@ -125,23 +160,8 @@ class TextInput {
                     return
                 }
                 // 対象文字がブロック分断用改行コード以外なら、現在ブロックを更新する
-                //else { updateText = e.target.value.remove(e.target.selectionStart-(('deleteContentBackward'===e.inputType) ? 1 : 0)) }
-                /*
-                else {
-                    //updateText = e.target.value.remove(e.target.selectionStart-(('deleteContentBackward'===e.inputType) ? 1 : 0))
-                    updateText = e.target.value
-                    console.log('updateText:', e.target.selectionStart-(('deleteContentBackward'===e.inputType) ? 1 : 0), updateText)
-                }
-                */
             }
             // 選択範囲がなく押下キーがDelete/BkSpでないなら、現在ブロックを更新する
-            /*
-            else {
-                // 同一ブロック内修正
-                const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim())
-                this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
-            }
-            */
             console.log('同一ブロック内修正')
             // 同一ブロック内修正
             const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value)
@@ -151,6 +171,7 @@ class TextInput {
         }
         //const isSelected = (e.target.selectionStart !== e.target.selectionEnd)
         //const selectedText = e.target.value.slice(e.target.selectionStart, e.target.selectionEnd)
+        */
     }
     #isSelected(e) { return (e.target.selectionStart !== e.target.selectionEnd) }
     #isDeleteKey(e) {

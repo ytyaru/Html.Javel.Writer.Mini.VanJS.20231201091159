@@ -1,0 +1,19 @@
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const ui = document.querySelector('textarea')
+    for (let name of ['input', 'cut', 'paste', 'select', 'keydown']) {
+        ui.addEventListener(name, async(e) => {console.log(`${name}:`, e)})
+    }
+    /*
+    ui.addEventListener('input', async(e) => {console.log('input:', e)})
+    ui.addEventListener('cut', async(e) => {console.log('cut:', e)})
+    ui.addEventListener('paste', async(e) => {console.log('paste:', e)})
+    ui.addEventListener('select', async(e) => {console.log('select:', e)})
+    ui.addEventListener('keydown', async(e) => {console.log('keydown:', e)})
+    */
+})
+</script>
+
+<h1>イベント発行順の確認</h1>
+<textarea>このテキストを範囲選択したりBkSp/Delキーで削除したりUndo/Redoしたりしてイベント発行順を確認してみてね。</textarea>
+<p>　範囲選択後にBkSp/Delキー押下しinputイベントでテキストを取得すると、削除後のテキストが取得され、削除したテキストは不明になってしまう。どうすれば削除したテキストを取得できるか。</p>
