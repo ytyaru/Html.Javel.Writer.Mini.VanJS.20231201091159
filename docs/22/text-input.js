@@ -1,7 +1,7 @@
 (function(){
 const { textarea } = van.tags
 class TextInput {
-    constructor(htmlViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; this.selectedText=null; this.isSelectedEdit=false;}
+    constructor(htmlViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; this.selectedText=null; this.isSelectedEdit=false; this.deletedText=null; }
     get element() { return textarea({id:this.id, placeholder:'原稿', style:()=>`box-sizing:border-box;`,
         oninput:(e)=>this.#onInput(e),
         oncut:(e)=>this.#onCut(e),
@@ -75,6 +75,7 @@ class TextInput {
                 this.isSelectedEdit = true
                 break
                 */
+
                 if (isSelected) {
                     const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, ('Enter'===e.key) ? e.target.value.insert(end, '\n') : e.target.value, this.htmlViewer.parser.textBlocks)
                     console.log(index, deleteCount, blocks)
@@ -151,7 +152,9 @@ class TextInput {
             if (0===start && 'deleteContentBackward'===e.inputType) { return } // 先頭でBkSp
             if (e.target.value.length-1===end&& 'deleteContentForward'===e.inputType) { return } // 末尾でDel
             // 対象文字がブロック分断用改行コードなら、前後ブロックを更新する
-            if (this.#isDeleteBlockNewline(e)) {
+            if (this.#isDeleteBlock(text, start, end)) {
+            if (''===this.selectedText)
+            //if (this.#isDeleteBlockNewline(e)) {
                 console.log('対象文字がブロック分断用改行コードなら、前後ブロックを更新する')
                 const delTxt = this.#deletedText(e)
                 const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, delTxt, this.htmlViewer.parser.textBlocks)
