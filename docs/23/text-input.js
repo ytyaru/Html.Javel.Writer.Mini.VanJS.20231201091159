@@ -54,23 +54,35 @@ class TextInput {
     }
     #compositionEnd(e) { this.#parseBlock(e) }
     #onKeydown(e) {
-        const [text, start, end] = [e.target.value, e.target.selectionStart, e.target.selectionEnd]
+        console.log('keydown:', e)
+        //const [text, start, end] = [e.target.value, e.target.selectionStart, e.target.selectionEnd]
+        //const isSelected = (0 < this.selectedText.length)
+        const isSelected = ((e.target.selectionStart !== e.target.selectionEnd) && 0 !== e.target.selectionStart)
+        const [text, start, end] = [e.target.value, 
+                                    e.target.selectionStart - (!isSelected && ('Backspace'===e.key) ? 1 : 0), 
+                                    e.target.selectionEnd + ((!isSelected && 'Delete'===e.key) ? 1 : 0)]
+        console.log(start, end, text)
         this.selectedText = text.slice(start, end)
         console.log('selectedText:', this.selectedText)
-        const isSelected = (0 < this.selectedText.length)
+        console.log('selectedText:', text.slice(start, end))
+        console.log('selectedText:', text.slice(start, end+1))
+        console.log('selectedText:', text.slice(start, end+2))
+        console.log('selectedText:', text.slice(start, end-1))
         switch (e.key) {
             case 'Delete':
             case 'Backspace':
             case 'Enter':
                 if (isSelected) {
+                    console.log('範囲選択あり')
                     const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, ('Enter'===e.key) ? e.target.value.insert(end, '\n') : e.target.value, this.htmlViewer.parser.textBlocks)
                     console.log(index, deleteCount, blocks)
                     this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
                     this.isSelectedEdit = true
                     return
                 } else {
-                    if ('Delete'===e.key) { this.selectedText = text.slice(start-1, start) }
-                    if ('Backspace'===e.key) { this.selectedText = text.slice(end-1, end) }
+                    console.log('範囲選択なし')
+//                    if ('Delete'===e.key) { this.selectedText = text.slice(start-1, start) }
+//                    if ('Backspace'===e.key) { this.selectedText = text.slice(end-1, end) }
                     // 何もしない
                     if (0===start && 'Backspace'===e.key) { this.isSelectedEdit=true; return } // 先頭でBkSp
                     if (e.target.value.length-1===end && 'Delete'===e.key) { this.isSelectedEdit=true; return } // 末尾でDel
@@ -80,7 +92,8 @@ class TextInput {
                         //const delTxt = this.#deletedText(e)
                         //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, delTxt, this.htmlViewer.parser.textBlocks)
                         //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('deleteContentBackward'===e.inputType) ? 1 : 0), e.target.selectionEnd - (('deleteContentForward'===e.inputType) ? 1 : 0), text, this.htmlViewer.parser.textBlocks)
-                        const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('Backspace'===e.key) ? 1 : 0), e.target.selectionEnd + (('Delete'===e.key) ? 1 : 0), text, this.htmlViewer.parser.textBlocks)
+                        //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('Backspace'===e.key) ? 1 : 0), e.target.selectionEnd + (('Delete'===e.key) ? 1 : 0), text, this.htmlViewer.parser.textBlocks)
+                        const [index, blocks, deleteCount] = TextBlock.cutBlocks(start, end, text, this.htmlViewer.parser.textBlocks)
                         console.log(index, deleteCount, blocks)
                         this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
                         this.isSelectedEdit = true; 
@@ -91,7 +104,7 @@ class TextInput {
         }
     }
     //#isDeleteBlock(text, start, end) { return ('\n'===this.selectedText && ('\n'===text.slice(start-1, start) || '\n'===text.slice(end-1, end))) }
-    #isDeleteBlock(text, start, end) { console.log('#isDeleteBlock():', start, end, this.selectedText, text); return ('\n'===this.selectedText && ('\n'===text.slice(start-1, start) || '\n'===text.slice(end-1, end))) }
+    #isDeleteBlock(text, start, end) { console.log('#isDeleteBlock():', ('\n'===this.selectedText && ('\n'===text.slice(start-1, start) || '\n'===text.slice(end-1, end))), start, end, this.selectedText, text); return ('\n'===this.selectedText && ('\n'===text.slice(start-1, start) || '\n'===text.slice(end-1, end))) }
     #parseBlock(e) {
         console.log(window.getSelection())
         console.log(window.getSelection().anchorNode)
