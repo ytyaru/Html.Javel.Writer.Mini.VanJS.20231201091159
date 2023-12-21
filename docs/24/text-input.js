@@ -132,7 +132,7 @@ class TextInput {
         // 選択範囲がなく押下キーがDelete/BkSpでないなら、現在ブロックを更新する
         // 選択範囲がなく押下キーがDelete/BkSpであり対象文字がブロック分断用改行コードなら、前後ブロックを更新する
         // 選択範囲がなく押下キーがDelete/BkSpであり対象文字がブロック分断用改行コード以外なら、現在ブロックを更新する
-
+        console.log('#input(): inputType', e.inputType)
         const text = e.target.value
         const start = e.target.selectionStart
         const end = e.target.selectionEnd
@@ -159,10 +159,19 @@ class TextInput {
             }
             // 対象文字がブロック分断用改行コード以外なら、現在ブロックを更新する
         }
+        else if ('insertLineBreak'===e.inputType && ((0<start && '\n'=== text.slice(start-2, start-1)) || (end<text.length-1 && '\n'===text.slice(end, end+1) )) ) { // Enterで改行追加され、その前後が改行であるなら、ブロック追加する
+            console.log('Enterで改行追加され、その前後が改行であるなら、ブロック追加する')
+            const [index, blocks, deleteCount] = TextBlock.cutBlocks(start, end, text, this.htmlViewer.parser.textBlocks)
+            console.log(index, deleteCount, blocks)
+            this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+            return
+        }
+
         // 選択範囲がなく押下キーがDelete/BkSpでないなら、現在ブロックを更新する
         console.log('同一ブロック内修正')
         // 同一ブロック内修正
         const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value)
+        console.log(index, block)
         this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
     }
     #isDeleteKey(e) {
