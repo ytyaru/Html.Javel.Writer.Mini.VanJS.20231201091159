@@ -62,7 +62,8 @@ class JavelParser {
         //this.textBlocks.filter(v=>v)
     }
     */
-    #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
+    //#blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
+    #blocksToHtmls(blocks) { return blocks.map(block=>(block.startsWith('# ')) ? h1(block.slice(2).split(/\n/).filter(v=>v).map(line=>[line, br()]).flat().slice(0, -1)) : p(block.split(/\n/).filter(v=>v).map(line=>[span(line), br()]).flat().slice(0, -1))) }
     #inline(text) {
         console.debug(text)
         const matches = EmRuby.matches(text)

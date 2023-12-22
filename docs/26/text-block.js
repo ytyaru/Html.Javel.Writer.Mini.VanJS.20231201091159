@@ -77,6 +77,8 @@ class TextBlock {
         if ((4 <= cutText.length) && cutText.startsWith('\n\n') && cutText.endsWith('\n\n')) { return 2 }
         if (cutText.startsWith('\n\n')) { return (cutText.endsWith('\n') && textBack.startsWith('\n')) ? 2 : 1 }
         if (cutText.endsWith('\n\n')) { return (cutText.startsWith('\n') && textFront.endsWith('\n')) ? 2 : 1 }
+//        if (cutText.startsWith('\n\n')) { return (cutText.endsWith('\n') && textBack.startsWith('\n')) ? 2 : 1 }
+//        if (cutText.endsWith('\n\n')) { return (cutText.startsWith('\n') && textFront.endsWith('\n')) ? 2 : 1 }
         if (cutText.startsWith('\n') && textFront.endsWith('\n')) { return 1 }
         if (cutText.endsWith('\n') && textBack.startsWith('\n')) { return 1 }
         return 0

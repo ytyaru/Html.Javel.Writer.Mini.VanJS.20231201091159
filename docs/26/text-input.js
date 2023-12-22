@@ -79,8 +79,8 @@ class TextInput {
                     console.log('((0<start && \\n=== text.slice(start-1, start)):', ((0<start && '\n'=== text.slice(start-1, start))))
                     console.log('(end<text.length-1 && \\n===text.slice(end, end+1)):', (end<text.length-1 && '\n'===text.slice(end, end+1) ))
                     if ('Enter'===e.key && 1===(end-start) && ((0<start && '\n'=== text.slice(start-1, start)) || (end<text.length-1 && '\n'===text.slice(end, end+1)))) { console.log('改行をEnterで置き換えたとき、何もしない'); return }
-                    const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, ('Enter'===e.key) ? e.target.value.insert(end, '\n') : e.target.value, this.htmlViewer.parser.textBlocks)
-                    //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
+                    //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, ('Enter'===e.key) ? e.target.value.insert(end, '\n') : e.target.value, this.htmlViewer.parser.textBlocks)
+                    const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
                     console.log(index, deleteCount, blocks)
                     this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
                     this.isSelectedEdit = true
