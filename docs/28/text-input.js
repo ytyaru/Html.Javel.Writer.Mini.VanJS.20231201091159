@@ -93,12 +93,13 @@ class TextInput {
                     // 何もしない
                     if (0===start && 'Backspace'===e.key) { this.isSelectedEdit=true; return } // 先頭でBkSp
                     if (e.target.value.length-1===end && 'Delete'===e.key) { this.isSelectedEdit=true; return } // 末尾でDel
-                    // ２つ以上の連続した改行は入力禁止（ENTER押下＆前後１｜前２｜後２つ改行有なら何もしない）
-                    if ('Enter'===e.key && (
+                    // ２つ以上の連続した改行は入力禁止（ENTER押下＆非IME入力中＆前後１｜前２｜後２つ改行有なら何もしない）
+                    if ('Enter'===e.key && !e.isComposing && (
                         (0<start && end<text.length-1 && '\n'=== text.slice(start-1, start) && '\n'===text.slice(end, end+1)) ||
                         (1<start && '\n'=== text.slice(start-1, start) && '\n'=== text.slice(start-2, start-1)) ||
                         (end<text.length-2 && '\n'===text.slice(end, end+1) && '\n'===text.slice(end+1, end+2))))
-                    { console.log('２つ以上の連続した改行は入力禁止'); this.isBanNewLine=true; return }
+                    //{ console.log('２つ以上の連続した改行は入力禁止'); this.isBanNewLine=true; return }
+                    { console.log('２つ以上の連続した改行は入力禁止'); this.isBanNewLine=true; e.preventDefault(); return }
                     // 対象文字がブロック分断用改行コードなら、前後ブロックを更新する
                     if (this.#isDeleteBlock(text, start, end)) {
                         console.log('対象文字がブロック分断用改行コードなら、前後ブロックを更新する')
