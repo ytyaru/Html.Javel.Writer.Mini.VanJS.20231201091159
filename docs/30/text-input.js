@@ -10,6 +10,7 @@ class TextInput {
         onkeydown:(e)=>this.#onKeydown(e)},
         this.htmlViewer.ja.val)
     }
+    #isNewLineOver(text) { return text.includes('\n\n\n') }
     #onInput(e) {
         console.log('INPUT !!!!!!!!!', e)
         if (this.#isComposing(e)) { return }
@@ -17,6 +18,7 @@ class TextInput {
         if (this.isPaste) { this.isCut=false; return; }
         if (this.isSelectedEdit) { this.isSelectedEdit=false; return; }
         if (this.isBanNewLine) { this.isBanNewLine=false; e.preventDefault(); return; }
+        if (this.#isNewLineOver(e.target.value)) { console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
         this.#input(e)
     }
     #onCut(e) {
@@ -80,6 +82,7 @@ class TextInput {
                     console.log('((0<start && \\n=== text.slice(start-1, start)):', ((0<start && '\n'=== text.slice(start-1, start))))
                     console.log('(end<text.length-1 && \\n===text.slice(end, end+1)):', (end<text.length-1 && '\n'===text.slice(end, end+1) ))
                     if ('Enter'===e.key && 1===(end-start) && ((0<start && '\n'=== text.slice(start-1, start)) || (end<text.length-1 && '\n'===text.slice(end, end+1)))) { console.log('改行をEnterで置き換えたとき、何もしない'); return }
+                    if (this.#isNewLineOver(text)) { console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
                     //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, ('Enter'===e.key) ? e.target.value.insert(end, '\n') : e.target.value, this.htmlViewer.parser.textBlocks)
                     const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
                     console.log(index, deleteCount, blocks)
@@ -93,6 +96,7 @@ class TextInput {
                     // 何もしない
                     if (0===start && 'Backspace'===e.key) { this.isSelectedEdit=true; return } // 先頭でBkSp
                     if (e.target.value.length-1===end && 'Delete'===e.key) { this.isSelectedEdit=true; return } // 末尾でDel
+                    /*
                     // ２つ以上の連続した改行は入力禁止（ENTER押下＆非IME入力中＆前後１｜前２｜後２つ改行有なら何もしない）
                     if ('Enter'===e.key && !e.isComposing && (
                         (0<start && end<text.length-1 && '\n'=== text.slice(start-1, start) && '\n'===text.slice(end, end+1)) ||
@@ -100,6 +104,8 @@ class TextInput {
                         (end<text.length-2 && '\n'===text.slice(end, end+1) && '\n'===text.slice(end+1, end+2))))
                     //{ console.log('２つ以上の連続した改行は入力禁止'); this.isBanNewLine=true; return }
                     { console.log('２つ以上の連続した改行は入力禁止'); this.isBanNewLine=true; e.preventDefault(); return }
+                    */
+                    if (this.#isNewLineOver(text)) { console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
                     // 対象文字がブロック分断用改行コードなら、前後ブロックを更新する
                     if (this.#isDeleteBlock(text, start, end)) {
                         console.log('対象文字がブロック分断用改行コードなら、前後ブロックを更新する')
@@ -156,6 +162,7 @@ class TextInput {
         console.log('selectedText:', text.slice(start, end))
         console.log('text:', text)
         console.log('範囲選択なし')
+        if (this.#isNewLineOver(text)) { console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
         if (this.#isDeleteKey(e)) {
             console.log('BkSp|Del押下')
             // 何もしない
