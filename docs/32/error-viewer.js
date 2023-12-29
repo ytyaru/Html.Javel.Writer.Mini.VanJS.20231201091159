@@ -53,32 +53,38 @@ class ErrorViewer {
         this.htmls = [
             this.#makeSummary(errors),
             this.#makeAllFixButton(errors, textarea),
-            this.#makeErrorTable(errors, textarea.value),
+            this.#makeErrorTable(errors, textarea),
         ]
     }
     #makeSummary(errors) { return p(`${errors.length}つのエラーがあります。すべて修正するまでプレビューできません。`) }
     #makeAllFixButton(errors, textarea) { return button({
         onclick:(e)=>alert('できるだけ自動修正する'),
         }, 'できるだけ自動修正する') }
-    #makeErrorTable(errors, text) {
+    #makeErrorTable(errors, textarea) {
         return table(
             tr(th('箇所'), th('内容'), th('修正案')),
-            this.#makeErrorTrs(errors, text).flat(),
+            this.#makeErrorTrs(errors, textarea).flat(),
         )
     }
-    #makeErrorTrs(errors, text) {
+    #makeErrorTrs(errors, textarea) {
         const trs = []
         //errors.map(e=>tr(td(e), td(e), td(e)))
         let s = 0
         for (let e of errors) {
-            const line = this.#getLineCount(text.slice(s, e.start))
+            const line = this.#getLineCount(textarea.value.slice(s, e.start))
             //trs.push(tr(td(line), td(details(summary(e.summary), e.details)), td(a({href:''}, e.methodSummary))))
-            trs.push(tr(td(line), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
+            //trs.push(tr(td(a({href:''}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
+            //trs.push(tr(td(a({href:this.#selectError(textarea, e)}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
+            trs.push(tr(td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
+            //trs.push(tr(td(a({href:`javascript:textarea.setSelectionRange(error.start, error.end)`}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
             s = e.start + 1
         }
         return trs
     }
     #getLineCount(text) { return (text.match(/\n/g) || []).length; }
+    //#selectError(textarea, error) { textarea.setSelectionRange(error.start, error.end) }
+    #selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.focus(); }
+    //#selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.value = '';}
     checkError(errors) {
         while ((m = text.exec(/[\n]{3,}/g)) != null) {
 
