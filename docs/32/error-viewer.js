@@ -72,11 +72,10 @@ class ErrorViewer {
         let s = 0
         for (let e of errors) {
             const line = this.#getLineCount(textarea.value.slice(s, e.start))
-            //trs.push(tr(td(line), td(details(summary(e.summary), e.details)), td(a({href:''}, e.methodSummary))))
-            //trs.push(tr(td(a({href:''}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
-            //trs.push(tr(td(a({href:this.#selectError(textarea, e)}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
-            trs.push(tr(td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
-            //trs.push(tr(td(a({href:`javascript:textarea.setSelectionRange(error.start, error.end)`}, line)), td(details(summary(e.constructor.summary), e.constructor.details)), td(a({href:''}, e.constructor.methodSummary))))
+            trs.push(tr(
+                td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, line)), 
+                td(details(summary(e.constructor.summary), e.constructor.details)), 
+                td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, e.constructor.methodSummary))))
             s = e.start + 1
         }
         return trs
@@ -85,6 +84,9 @@ class ErrorViewer {
     //#selectError(textarea, error) { textarea.setSelectionRange(error.start, error.end) }
     #selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.focus(); }
     //#selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.value = '';}
+    #fixError(textarea, error) {
+
+    }
     checkError(errors) {
         while ((m = text.exec(/[\n]{3,}/g)) != null) {
 
