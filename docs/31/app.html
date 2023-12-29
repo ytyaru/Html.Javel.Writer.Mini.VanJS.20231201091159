@@ -30,13 +30,15 @@ em {
 <script type="text/javascript" src="javel-parser.js"></script>
 <script type="text/javascript" src="focus-looper.js"></script>
 <script type="text/javascript" src="html-viewer.js"></script>
+<script type="text/javascript" src="error-viewer.js"></script>
 <script type="text/javascript" src="text-input.js"></script>
 <script type="text/javascript" src="app-style.js"></script>
 <script>
 window.addEventListener('DOMContentLoaded', async(event) => {
     const { div, span, h1, p, br, textarea, button } = van.tags
     const htmlViewer = new HtmlViewer()
-    const textInput = new TextInput(htmlViewer)
+    const errorViewer = new ErrorViewer()
+    const textInput = new TextInput(htmlViewer, errorViewer)
 
     appStyle.setup()
     van.add(document.body, div({id:'javel-writer-min', style:appStyle.style.bind(appStyle)},
@@ -47,6 +49,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             ()=>((htmlViewer.isVertical) ? '縦' : '横')
         ),
         htmlViewer.element,
+        errorViewer.element,
     ))
     focusLooper.setup()
     textInput.setup()

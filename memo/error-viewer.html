@@ -1,0 +1,31 @@
+<style>* { padding:0; margin:0; }</style>
+<script src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const { div, span, h1, p, a, br, textarea, button } = van.tags
+    const htmlViewerDisplay = van.state('block')
+    const errorViewerDisplay = van.state('none')
+    function changeDisplay() {
+        if ('block'===htmlViewerDisplay.val) {
+            htmlViewerDisplay.val = 'none'
+            errorViewerDisplay.val = 'block'
+        } else {
+            htmlViewerDisplay.val = 'block'
+            errorViewerDisplay.val = 'none'
+        }
+        console.log('htmlViewerDisplay.val:', htmlViewerDisplay.val)
+        console.log('errorViewerDisplay.val:', errorViewerDisplay.val)
+    }
+    van.add(document.body, div({id:'javel-writer-min', style:`display:grid;grid-template-columns:1fr 32px 1fr;grid-template-rows:1fr;width:100vw;height:100vh;`},
+        textarea({id:'text-editor'}),
+        button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
+            onclick:(e)=>changeDisplay(),
+            },
+            ()=>'表示変更'
+        ),
+        div({id:'html-viewer', style:()=>`display:${htmlViewerDisplay.val};`}, h1('html-viewer'), a({href:''}, 'フォーカス用リンク')),
+        div({id:'error-viewer', style:()=>`display:${errorViewerDisplay.val};`}, h1('error-viewer'), a({href:''}, 'フォーカス用リンク')),
+    ))
+})
+</script>
+

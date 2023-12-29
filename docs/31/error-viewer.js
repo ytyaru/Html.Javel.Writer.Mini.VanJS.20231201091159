@@ -1,12 +1,12 @@
 (function(){
-const { div, span, h1, p, br } = van.tags
+const { div, span, h1, p, a, br, button } = van.tags
 class ErrorViewer {
     constructor() {
         this.parser = new JavelParser()
         this._id = 'error-viewer'
-        //this.ja = van.state('# 原稿\n\n　これは原稿です。自由に書いてください。\n\n　構文は３つです。見出し、パラグラフ、改行です。\n　見出しは行頭に#と半角スペースのあとに文字を書きます。\n　パラグラフは空行を挟みます。\n　改行は連続したテキスト間にひとつだけ改行を入れるとパラグラフ内で改行できます。\n\n　このテキストエリアに原稿を書くと、↓にHTMLとして表示されます。\n\n　↓のボタンを押すと横書き／縦書きを切替します。\n\n　HTML表示領域は長くなるとスクロールします。縦書きのときは横スクロールですが、マウスホイールでスクロールできます。\n\n# ｜見出し《heading》で《《強調》》と送《おく》り仮名《がな》\n\n　拡張構文としてemとrubyを実装しました。｜《｜《強調｜》｜》のようにすると傍点（圏点）がつきます。また、漢字｜《かんじ｜》のように書くとルビが振れます。もし漢字以外の文字が含まれている箇所にルビを振りたいときは最初の文字にハイフンをつけます。｜あいうえお《アイウエオ》のようになります。')
         //this._htmls = van.state([])
         this._htmls = van.state(['Nつのエラーがあります。すべて修正するまでプレビューできません。'])
+        this.display = van.state('none')
         this.writingMode = van.state('vertical-rl')
         console.log(this.writingMode.val)
         this.textOrientation = van.state('upright')
@@ -47,7 +47,7 @@ class ErrorViewer {
         }
     }
     // html-viewerは縦書きでHTML表示したいからdiv要素にする。でもdiv要素はfocusが当たらない。なのでtabindex=0を設定した。標準のキー操作だと矢印の上を押し続けるとbody要素へフォーカスが飛んでしまう。なのでキャレットを排除すべくuser-select:none;にして、かつキーイベントでスクロール操作するよう実装した。
-    #style() { console.log(this.writingMode.val);return `writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
+    #style() { console.log(this.writingMode.val);return `display:${this.display.val};writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
 }
 window.ErrorViewer = ErrorViewer
 })()
