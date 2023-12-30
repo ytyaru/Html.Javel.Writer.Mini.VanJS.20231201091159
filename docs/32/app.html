@@ -38,7 +38,7 @@ em {
 window.addEventListener('DOMContentLoaded', async(event) => {
     const { div, span, h1, p, br, textarea, button } = van.tags
     const htmlViewer = new HtmlViewer()
-    const errorViewer = new ErrorViewer()
+    const errorViewer = new ErrorViewer(htmlViewer)
     const textInput = new TextInput(htmlViewer, errorViewer)
 
     appStyle.setup()

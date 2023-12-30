@@ -1,7 +1,8 @@
 (function(){
 const { div, span, h1, p, a, br, button, table, tr, th, td, details, summary } = van.tags
 class ErrorViewer {
-    constructor() {
+    constructor(htmlViewer) {
+        this.htmlViewer = htmlViewer
         this.parser = new JavelParser()
         this._id = 'error-viewer'
         //this._htmls = van.state([])
@@ -13,6 +14,10 @@ class ErrorViewer {
         this.overflowX = van.state('auto')
         this.overflowY = van.state('hidden')
     }
+    get isShow() { return 'block'===this.display.val }
+    set isShow(v) { this.display.val = (v) ? 'block' : 'none' }
+    show() { this.display.val = 'block' }
+    hide() { this.display.val = 'none' }
     get htmls() { return this._htmls }
     set htmls(v) { if (Type.isArray(v)) { this._htmls.val = [...v] } }// 反応させるには新しい配列にする必要ある。VanJSの仕様
     get element() { return div({id:this._id, tabindex:0, 
@@ -68,16 +73,13 @@ class ErrorViewer {
     }
     #makeErrorTrs(errors, textarea) {
         const trs = []
-        //errors.map(e=>tr(td(e), td(e), td(e)))
-        let s = 0
         for (let e of errors) {
-            //const line = this.#getLineCount(textarea.value.slice(s, e.start))
             const line = this.#getLineCount(textarea.value.slice(0, e.start))
             trs.push(tr(
                 td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, line)), 
                 td(details(summary(e.constructor.summary), e.constructor.details)), 
-                td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, e.constructor.methodSummary))))
-            s = e.end + 1
+                td(a({href:'javascript:void(0);', onclick:()=>this.#fixError(textarea, e)}, e.constructor.methodSummary))))
+                //td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, e.constructor.methodSummary))))
         }
         return trs
     }
@@ -86,7 +88,19 @@ class ErrorViewer {
     #selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.focus(); }
     //#selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.value = '';}
     #fixError(textarea, error) {
-
+        this.#selectError(textarea, error)
+        textarea.setRangeText(error.method(), error.start, error.end)
+        console.log('自動修正しました！')
+        this.#updateErrors(textarea)
+    }
+    #updateErrors(textarea) {
+        console.log('#updateErrors()')
+        const errors = JavelSyntaxError.check(textarea.value)
+        console.log(errors)
+        this.makeHtml(textarea, errors)
+        this.isShow = (0 < errors.length)
+        this.htmlViewer.isShow = !this.isShow
+        console.log(this.isShow, this.htmlViewer.isShow)
     }
     checkError(errors) {
         while ((m = text.exec(/[\n]{3,}/g)) != null) {

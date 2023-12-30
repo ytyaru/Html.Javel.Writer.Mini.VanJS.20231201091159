@@ -13,6 +13,10 @@ class HtmlViewer {
         this.overflowX = van.state('auto')
         this.overflowY = van.state('hidden')
     }
+    get isShow() { return 'block'===this.display.val }
+    set isShow(v) { this.display.val = (v) ? 'block' : 'none' }
+    show() { this.display.val = 'block' }
+    hide() { this.display.val = 'none' }
     get htmls() { return this._htmls }
     set htmls(v) { if (Type.isArray(v)) { this._htmls.val = [...v] } }// 反応させるには新しい配列にする必要ある。VanJSの仕様
     get element() { return div({id:this._id, tabindex:0, 
