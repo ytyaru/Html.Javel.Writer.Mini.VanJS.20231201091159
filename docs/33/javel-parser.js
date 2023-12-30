@@ -74,8 +74,8 @@ class JavelParser {
             if (0 === matches[i].index) { start = matches[i].length; continue }
             const length = matches[i].index
             if (start === length) continue
-            spans.push({index:start, length:length, html:span({class:'text-node'}, text.slice(start, length))})
-            //spans.push({index:start, length:length, html:span({class:'text-node'}, EmRuby.escapePipe(text.slice(start, length)))})
+            //spans.push({index:start, length:length, html:span({class:'text-node'}, text.slice(start, length))})
+            spans.push({index:start, length:length, html:span({class:'text-node'}, EmRuby.escapePipe(text.slice(start, length)))})
             start = matches[i].index + matches[i].length
         }
         if (start < text.length-1) { spans.push({index:start, length:text.length, html:span({class:'text-node'}, text.slice(start, text.length))}) }
