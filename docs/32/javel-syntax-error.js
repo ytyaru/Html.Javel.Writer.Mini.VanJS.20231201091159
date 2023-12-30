@@ -34,7 +34,7 @@ class JavelSyntaxError {
         this.line = this.#getLineCount(text.slice(0, start))
     }
     #getLineCount(text) { return (text.match(/\n/g) || []).length; }
-    method(text) { return text.slice(start, end) }
+//    method(text) { return text.slice(start, end) }
     static check(text) {
         const errors = []
         const ERRORS = [ExceedLineBreak]

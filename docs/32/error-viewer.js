@@ -5,7 +5,6 @@ class ErrorViewer {
         this.htmlViewer = htmlViewer
         this.parser = new JavelParser()
         this._id = 'error-viewer'
-        //this._htmls = van.state([])
         this._htmls = van.state(['Nつのエラーがあります。すべて修正するまでプレビューできません。'])
         this.display = van.state('none')
         this.writingMode = van.state('vertical-rl')
@@ -54,7 +53,6 @@ class ErrorViewer {
     // html-viewerは縦書きでHTML表示したいからdiv要素にする。でもdiv要素はfocusが当たらない。なのでtabindex=0を設定した。標準のキー操作だと矢印の上を押し続けるとbody要素へフォーカスが飛んでしまう。なのでキャレットを排除すべくuser-select:none;にして、かつキーイベントでスクロール操作するよう実装した。
     #style() { console.log(this.writingMode.val);return `display:${this.display.val};writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
     makeHtml(textarea, errors) {
-        //const errors = JavelSyntaxError.check(textarea.value)
         this.htmls = [
             this.#makeSummary(errors),
             this.#makeAllFixButton(errors, textarea),
@@ -62,9 +60,26 @@ class ErrorViewer {
         ]
     }
     #makeSummary(errors) { return p(`${errors.length}つのエラーがあります。すべて修正するまでプレビューできません。`) }
-    #makeAllFixButton(errors, textarea) { return button({
-        onclick:(e)=>alert('できるだけ自動修正する'),
-        }, 'できるだけ自動修正する') }
+    #makeAllFixButton(errors, textarea) {
+        const hasMethodCount = errors.filter(e=>this.#getMethodNames(e).includes('method')).length
+        if (0===hasMethodCount) { return '' }
+        const text = (hasMethodCount===errors.length) ? '全件自動修正する' : `できるだけ自動修正する　${hasMethodCount}/${errors.length}`
+        return a({href:'javascript:void(0);', onclick:()=>{
+            for (let i=0; i<errors.length; i++) {
+                const diff = this.#fixError(textarea, errors[i], false)
+                this.#resetErrorStart(errors, i, diff)
+            }
+            this.#updateErrors(textarea)
+        }}, text)
+    }
+    #resetErrorStart(errors, idx, diff) { for (let i=idx; i<errors.length; i++) { errors[i].start += diff } }
+    #getMethodNames(obj) {
+        const getOwnMethods = (obj) => Object.entries(Object.getOwnPropertyDescriptors(obj))
+            .filter(([name, {value}]) => typeof value === 'function' && name !== 'constructor')
+            .map(([name]) => name)
+        const _getMethods = (o, methods) => o === Object.prototype ? methods : _getMethods(Object.getPrototypeOf(o), methods.concat(getOwnMethods(o)))
+        return _getMethods(obj, [])
+    }
     #makeErrorTable(errors, textarea) {
         return table(
             tr(th('箇所'), th('内容'), th('修正案')),
@@ -79,19 +94,22 @@ class ErrorViewer {
                 td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, line)), 
                 td(details(summary(e.constructor.summary), e.constructor.details)), 
                 td(a({href:'javascript:void(0);', onclick:()=>this.#fixError(textarea, e)}, e.constructor.methodSummary))))
-                //td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, e.constructor.methodSummary))))
         }
         return trs
     }
     #getLineCount(text) { return (text.match(/\n/g) || []).length + 1; }
-    //#selectError(textarea, error) { textarea.setSelectionRange(error.start, error.end) }
-    #selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.focus(); }
-    //#selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.value = '';}
-    #fixError(textarea, error) {
+    #selectError(textarea, error) { textarea.setSelectionRange(error.start, error.end); textarea.focus(); }
+    #fixError(textarea, error, isUpdate=true) {
+        console.log('#fixError():', error)
         this.#selectError(textarea, error)
-        textarea.setRangeText(error.method(), error.start, error.end)
+        const afterText = error.method()
+        const beforeLen = error.end - error.start
+        const afterLen = afterText.length
+        const diff = afterLen - beforeLen
+        textarea.setRangeText(afterText, error.start, error.end)
         console.log('自動修正しました！')
-        this.#updateErrors(textarea)
+        if (isUpdate) { this.#updateErrors(textarea) }
+        return diff
     }
     #updateErrors(textarea) {
         console.log('#updateErrors()')
