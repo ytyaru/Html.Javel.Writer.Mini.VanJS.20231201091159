@@ -14,7 +14,8 @@ class TextInput {
     //#hasError(e) { this.errors = JavelSyntaxError.check(e.target.value); return 0 < this.errors.length; }
     #hasError(e) { this.errors = JavelSyntaxError.check(e.target.value); console.log(this.errors.length, this.errors); return 0 < this.errors.length; }
     #checkError(e) {
-        if (this.#hasError(e)) {
+        const hasError = this.#hasError(e)
+        if (hasError) {
             this.errorViewer.makeHtml(e.target, this.errors)
             this.htmlViewer.display.val = 'none'
             this.errorViewer.display.val = 'block'
@@ -25,6 +26,7 @@ class TextInput {
         console.log('this.htmlViewer.display.val:', this.htmlViewer.display.val)
         console.log('this.errorViewer.display.val:', this.errorViewer.display.val)
         console.warn('３つ以上の連続改行があります。２つ以下にしてください。');
+        return hasError
     }
     /*
     #changeDisplay(e) {

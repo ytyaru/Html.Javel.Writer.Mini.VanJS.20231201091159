@@ -71,16 +71,17 @@ class ErrorViewer {
         //errors.map(e=>tr(td(e), td(e), td(e)))
         let s = 0
         for (let e of errors) {
-            const line = this.#getLineCount(textarea.value.slice(s, e.start))
+            //const line = this.#getLineCount(textarea.value.slice(s, e.start))
+            const line = this.#getLineCount(textarea.value.slice(0, e.start))
             trs.push(tr(
                 td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, line)), 
                 td(details(summary(e.constructor.summary), e.constructor.details)), 
                 td(a({href:'javascript:void(0);', onclick:()=>this.#selectError(textarea, e)}, e.constructor.methodSummary))))
-            s = e.start + 1
+            s = e.end + 1
         }
         return trs
     }
-    #getLineCount(text) { return (text.match(/\n/g) || []).length; }
+    #getLineCount(text) { return (text.match(/\n/g) || []).length + 1; }
     //#selectError(textarea, error) { textarea.setSelectionRange(error.start, error.end) }
     #selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.focus(); }
     //#selectError(textarea, error) { console.log('XXXXXXXXXXXXXXXXX', textarea, error); textarea.setSelectionRange(error.start, error.end); textarea.value = '';}
