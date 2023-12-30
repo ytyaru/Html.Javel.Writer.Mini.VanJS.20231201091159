@@ -1,7 +1,7 @@
 (function(){
 const { textarea } = van.tags
 class TextInput {
-    constructor(htmlViewer, errorViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.errorViewer=errorViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; this.selectedText=null; this.isSelectedEdit=false; this.deletedText=null; this.isBanNewLine=false; this.errors=[]; }
+    constructor(htmlViewer, errorViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.errorViewer=errorViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; this.selectedText=null; this.isSelectedEdit=false; this.deletedText=null; this.isBanNewLine=false; this.errors=[]; this.isNotEditInputBlock=false; }
     get element() { return textarea({id:this.id, placeholder:'原稿', style:()=>`box-sizing:border-box;`,
         oninput:(e)=>this.#onInput(e),
         oncut:(e)=>this.#onCut(e),
@@ -63,6 +63,7 @@ class TextInput {
         if (this.isPaste) { this.isCut=false; return; }
         if (this.isSelectedEdit) { this.isSelectedEdit=false; return; }
         if (this.isBanNewLine) { this.isBanNewLine=false; e.preventDefault(); return; }
+
         //if (this.#isNewLineOver(e.target.value)) { this.#changeDisplay(e); console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
         //if (this.#hasError(e)) { this.#changeDisplay(e); console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
         if (this.#checkError(e)) { return }
@@ -156,7 +157,8 @@ class TextInput {
                     */
                     //if (this.#isNewLineOver(text)) { this.#changeDisplay(e); console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
                     //if (this.#hasError(e)) { this.#changeDisplay(e); console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
-                    if (this.#checkError(e)) { return }
+                    //if (this.#checkError(e)) { return }
+                    if (this.#checkError(e)) { if (['Backspace','Delete'].some(key=>key===e.key)) {this.isNotEditInputBlock=true}; return; }
                     // 対象文字がブロック分断用改行コードなら、前後ブロックを更新する
                     if (this.#isDeleteBlock(text, start, end)) {
                         console.log('対象文字がブロック分断用改行コードなら、前後ブロックを更新する')
@@ -216,6 +218,7 @@ class TextInput {
         //if (this.#isNewLineOver(text)) { this.#changeDisplay(e); console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
         //if (this.#hasError(e)) { this.#changeDisplay(e); console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
         if (this.#checkError(e)) { return }
+        if (this.isNotEditInputBlock) { this.isNotEditInputBlock=false; return; }
         if (this.#isDeleteKey(e)) {
             console.log('BkSp|Del押下')
             // 何もしない
