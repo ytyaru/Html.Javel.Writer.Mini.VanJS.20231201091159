@@ -46,6 +46,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         'バグ改修（JavelParser.Ruby.matchesLong()でメタ文字エスケープ忘れ。メタ文字《》のエスケープで｜の消去ができていない。）',
         'パフォーマンス改善できず（generator, asyncを使ったが逆に遅くなってしまった…。vanX.reactive(), vanX.list(), vanX.replace()を使ったほうがいいかも？）',
         'リファクタリング（HtmlViewer._htmls = van.state([])を、textBlocks = vanX.reactive([])に変更した）表示速度低下（HTML表示されるまでにかかる時間が長くなってしまった…たぶん配列を一部変更したら全体を再描画している？）',
+        'コードを元に戻してパフォーマンス改善試行予定（ペースト時async化するも大差なし。WebWorkerを使うべきか？その場合はHTTPSである必要がある）',
         /*
         パフォーマンス改善予定（全テキストブロック生成のジェネレータ化）
         パフォーマンス改善予定（全テキストブロック生成のジェネレータ中Loading表示と切替）
