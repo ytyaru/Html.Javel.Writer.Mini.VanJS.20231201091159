@@ -26,6 +26,7 @@ em {
 <script type="text/javascript" src="util/string/trim.js"></script>
 <script type="text/javascript" src="util/string/insert.js"></script>
 <script type="text/javascript" src="../lib/van/1.2.6/nomodule.min.js"></script>
+<script type="text/javascript" src="../lib/van-x/0.1.3/nomodule.min.js"></script>
 <script type="text/javascript" src="text-block.js"></script>
 <script type="text/javascript" src="javel-parser.js"></script>
 <script type="text/javascript" src="focus-looper.js"></script>
@@ -53,10 +54,10 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         errorViewer.element,
     ))
     focusLooper.setup()
-    //textInput.setup()
+    textInput.setup()
     //textInput.setupAsync()
-    console.log('setupAsync()開始外側！')
-    textInput.setupAsync().then(()=>console.log('setupAsync()完了！'))
-    console.log('setupAsync()完了外側！')
+//    console.log('setupAsync()開始外側！')
+//    textInput.setupAsync().then(()=>console.log('setupAsync()完了！'))
+//    console.log('setupAsync()完了外側！')
 })
 </script>

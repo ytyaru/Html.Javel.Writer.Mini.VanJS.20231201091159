@@ -72,9 +72,11 @@ class TextInput {
     #onCut(e) {
         console.log('CUT !!!!!!!', e)
         console.log(e.target.selectionStart, e.target.selectionEnd)
-        const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim(), this.htmlViewer.parser.textBlocks)
+        //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim(), this.htmlViewer.parser.textBlocks)
+        const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim(), this.htmlViewer.textBlocks)
         console.log(index, deleteCount, blocks)
-        this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+        //this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+        this.htmlViewer.textBlocks.splice(index, deleteCount, ...blocks)
         this.isCut = true
     }
     #getClipboardText(e) {
@@ -85,8 +87,10 @@ class TextInput {
     #onPaste(e) {
         console.log('PASTE !!!!!!!!!')
         console.log(e.target.selectionStart, e.target.selectionEnd)
-        const [index, blocks] = TextBlock.pasteBlocks(e.target.selectionStart, e.target.selectionEnd, this.#getClipboardText(e), e.target.value, this.htmlViewer.parser.textBlocks)
-        this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks)
+        //const [index, blocks] = TextBlock.pasteBlocks(e.target.selectionStart, e.target.selectionEnd, this.#getClipboardText(e), e.target.value, this.htmlViewer.parser.textBlocks)
+        const [index, blocks] = TextBlock.pasteBlocks(e.target.selectionStart, e.target.selectionEnd, this.#getClipboardText(e), e.target.value, this.htmlViewer.textBlocks)
+        //this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks)
+        this.htmlViewer.textBlocks.splice(index, 2, ...blocks)
         this.isPaste = true
     }
     // IME入力中判定 https://qiita.com/alt_yamamoto/items/8663d047a3794dd5605e
@@ -134,9 +138,11 @@ class TextInput {
                     //if (this.#hasError(e)) { this.#changeDisplay(e); console.warn('３つ以上の連続改行があります。２つ以下にしてください。'); return }
                     if (this.#checkError(e)) { return }
                     //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, ('Enter'===e.key) ? e.target.value.insert(end, '\n') : e.target.value, this.htmlViewer.parser.textBlocks)
-                    const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
+                    //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
+                    const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.textBlocks)
                     console.log(index, deleteCount, blocks)
-                    this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                    //this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                    this.htmlViewer.textBlocks.splice(index, deleteCount, ...blocks)
                     this.isSelectedEdit = true
                     return
                 } else {
@@ -166,9 +172,11 @@ class TextInput {
                         //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, delTxt, this.htmlViewer.parser.textBlocks)
                         //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('deleteContentBackward'===e.inputType) ? 1 : 0), e.target.selectionEnd - (('deleteContentForward'===e.inputType) ? 1 : 0), text, this.htmlViewer.parser.textBlocks)
                         //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('Backspace'===e.key) ? 1 : 0), e.target.selectionEnd + (('Delete'===e.key) ? 1 : 0), text, this.htmlViewer.parser.textBlocks)
-                        const [index, blocks, deleteCount] = TextBlock.cutBlocks(start, end, text, this.htmlViewer.parser.textBlocks)
+                        //const [index, blocks, deleteCount] = TextBlock.cutBlocks(start, end, text, this.htmlViewer.parser.textBlocks)
+                        const [index, blocks, deleteCount] = TextBlock.cutBlocks(start, end, text, this.htmlViewer.textBlocks)
                         console.log(index, deleteCount, blocks)
-                        this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                        //this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                        this.htmlViewer.textBlocks.splice(index, deleteCount, ...blocks)
                         this.isSelectedEdit = true; 
                         return
                     }
@@ -195,8 +203,8 @@ class TextInput {
 
         // 同一ブロック内修正
         const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim())
-        this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
-
+        //this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
+        this.htmlViewer.textBlocks[index] = block
     }
     #input(e) {
         // 選択範囲があり押下キーがDelete/BkSpであるなら、選択範囲が含まれるブロックを更新する
@@ -229,9 +237,11 @@ class TextInput {
                 console.log('対象文字がブロック分断用改行コードなら、前後ブロックを更新する')
                 const delTxt = this.#deletedText(e)
                 //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, delTxt, this.htmlViewer.parser.textBlocks)
-                const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('deleteContentBackward'===e.inputType) ? 1 : 0), e.target.selectionEnd - (('deleteContentForward'===e.inputType) ? 1 : 0), delTxt, this.htmlViewer.parser.textBlocks)
+                //const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('deleteContentBackward'===e.inputType) ? 1 : 0), e.target.selectionEnd - (('deleteContentForward'===e.inputType) ? 1 : 0), delTxt, this.htmlViewer.parser.textBlocks)
+                const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart - (('deleteContentBackward'===e.inputType) ? 1 : 0), e.target.selectionEnd - (('deleteContentForward'===e.inputType) ? 1 : 0), delTxt, this.htmlViewer.textBlocks)
                 console.log(index, deleteCount, blocks)
-                this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                //this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+                this.htmlViewer.textBlocks.splice(index, deleteCount, ...blocks)
                 return
             }
             // 対象文字がブロック分断用改行コード以外なら、現在ブロックを更新する
@@ -248,9 +258,11 @@ class TextInput {
             */
             //const [index, blocks] = TextBlock.pasteBlocks(start, end, '\n', text.remove(start-1), this.htmlViewer.parser.textBlocks)
             //const [index, blocks] = TextBlock.pasteBlocks(start-2, end-2, '\n', text.remove(start-1), this.htmlViewer.parser.textBlocks)
-            const [index, blocks] = TextBlock.pasteBlocks(start-1, end-1, '\n', text.remove(start-1), this.htmlViewer.parser.textBlocks)
+            //const [index, blocks] = TextBlock.pasteBlocks(start-1, end-1, '\n', text.remove(start-1), this.htmlViewer.parser.textBlocks)
+            const [index, blocks] = TextBlock.pasteBlocks(start-1, end-1, '\n', text.remove(start-1), this.htmlViewer.textBlocks)
             console.log(index, blocks)
-            this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks)
+            //this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks)
+            this.htmlViewer.textBlocks.splice(index, 2, ...blocks)
             return
 
         }
@@ -260,7 +272,8 @@ class TextInput {
         // 同一ブロック内修正
         const [index, block] = TextBlock.selected(e.target.selectionStart, e.target.selectionEnd, e.target.value)
         console.log(index, block)
-        this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
+//        this.htmlViewer._htmls.val = [...this.htmlViewer.parser.setBlockText(index, block)] // 反応させるには新しい別の配列オブジェクトにする必要があるみたい。VanJSの仕様
+        this.htmlViewer.textBlocks[index] = block
     }
     #isDeleteKey(e) {
         switch (e.type) {
@@ -298,7 +311,18 @@ class TextInput {
         console.warn('#deletedText(e):削除以外で使用されてしまった：', e.inputType, e)
     }
     setup() {
-        this.htmlViewer._htmls.val = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
+        for (let block of TextBlock.fromText(document.querySelector(`#${this.id}`).value)) {
+            this.htmlViewer.textBlocks.push(block)
+        }
+//        this.textBlocks = vanX.reactive(TextBlock.fromText(document.querySelector(`#${this.id}`).value))
+//        this.htmlViewer._htmls.val = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
+        document.querySelector(`#${this.id}`).addEventListener('compositionend', this.#compositionEnd.bind(this))
+    }
+    async setupAsync() {
+        console.log('setupAsync()開始！')
+        for (let block of TextBlock.fromText(document.querySelector(`#${this.id}`).value)) {
+            this.htmlViewer.textBlocks.push(block)
+        }
         document.querySelector(`#${this.id}`).addEventListener('compositionend', this.#compositionEnd.bind(this))
     }
     /*
@@ -318,11 +342,13 @@ class TextInput {
         //document.querySelector(`#${this.id}`).addEventListener('compositionend', this.#composition.bind(this))
     }
     */
+    /*
     async setupAsync() {
         console.log('setupAsync()開始！')
         this.htmlViewer._htmls.val = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
         document.querySelector(`#${this.id}`).addEventListener('compositionend', this.#compositionEnd.bind(this))
     }
+    */
     /*
     async setupAsync() {
         console.log('setupAsync()')

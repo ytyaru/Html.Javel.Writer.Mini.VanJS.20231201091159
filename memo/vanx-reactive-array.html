@@ -1,0 +1,32 @@
+<script src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
+<script src="../docs/lib/van-x/0.1.3/nomodule.min.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const { div, h1, p, ruby, rt, rp, em, a, span, button } = van.tags
+    //const htmls = vanX.reactive([h1('表題'), p('本文１。'), p(ruby('本文',rp('（'),rt('ほんぶん'),rp('）')), span('２。'))])
+    //const htmls = vanX.reactive(['<h1>表題</h1>', '<p>本文１。</p>'])
+    const textBlocks = vanX.reactive(['# 表題', '　本文１。'])
+    van.add(document.body, vanX.list(div, textBlocks, block=>(block.val.startsWith('#')) ? h1(block.val.slice(2)) : p(block)))
+    van.add(document.body, button({onclick:()=>textBlocks.push('　追加された本文。')}, '追加する'))
+    console.log(textBlocks)
+    textBlocks.forEach(block=>console.log(block))
+    /*
+    console.log(htmls)
+    console.log(htmls.val)
+    console.log(htmls[0])
+    htmls.forEach(h=>console.log(h))
+    console.log(Object.assign({}, htmls))
+    console.log(Object.assign({}, htmls)[0])
+    //console.log(vanX.list(div, htmls, v=>v))
+//    console.log(vanX.list(div, htmls, v=>v))
+//    van.add(document.body, htmls)
+//    van.add(document.body, htmls.val)
+//    van.add(document.body, ...htmls.val)
+//    van.add(document.body, ...htmls)
+//    van.add(document.body, ()=>htmls)
+//    van.add(document.body, ()=>...htmls)
+//    van.add(document.body, ()=>htmls.map(h=>h.innerHTML))
+//    van.add(document.body, vanX.list(div, htmls, v=>v))
+    */
+})
+</script>
