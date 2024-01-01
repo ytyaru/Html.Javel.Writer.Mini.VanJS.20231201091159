@@ -1,0 +1,108 @@
+<style>
+:root { --font-size:max(16px, calc(100vw / 42)); --em-style:filled sesame; --em-color:#fff; --color:#fff; --a-color:#00f; --background-color:#000; }
+body {
+    overflow-x:hidden;
+    overflow-y:hidden;
+    padding:0;margin:0;
+    width:100%;
+    height:100%;
+}
+body, textarea {
+    font-family: 'Noto Serif JP', 'Source Han Serif JP', 'Noto Color Emoji', serif; 
+    font-size: var(--font-size);
+    line-height: 1.7em;
+    letter-spacing: 0.05em;
+    color: var(--color);
+    background-color: var(--background-color);
+}
+button { user-select:none; }
+h1 { font-family: 'Noto Sans JP', 'Source Han Sans JP', 'Noto Color Emoji', sans-serif; }
+em {
+    font-style: normal; /* 非イタリック化 */
+    text-emphasis: var(--em-style) var(--em-color);
+    -webkit-text-emphasis: var(--em-style) var(--em-color);
+}
+a:link, a:visited, a:hover, a:active { color: var(--a-color); }
+/*
+a:link { color: #0000ff; }
+a:visited { color: #000080; }
+a:hover { color: #ff0000; }
+a:active { color: #ff8000; }
+*/
+</style>
+<script type="text/javascript" src="util/type.js"></script>
+<script type="text/javascript" src="util/string/length.js"></script>
+<script type="text/javascript" src="util/string/trim.js"></script>
+<script type="text/javascript" src="util/string/insert.js"></script>
+<script type="text/javascript" src="util/css.js"></script>
+<script type="text/javascript" src="../lib/van/1.2.6/nomodule.min.js"></script>
+<script type="text/javascript" src="loading-viewer.js"></script>
+<script type="text/javascript" src="text-block.js"></script>
+<script type="text/javascript" src="javel-parser.js"></script>
+<script type="text/javascript" src="focus-looper.js"></script>
+<script type="text/javascript" src="html-viewer.js"></script>
+<script type="text/javascript" src="javel-syntax-error.js"></script>
+<script type="text/javascript" src="error-viewer.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript" src="text-input.js"></script>
+<script type="text/javascript" src="app-style.js"></script>
+<script type="text/javascript" src="color-scheme.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const { div, span, h1, p, br, textarea, button } = van.tags
+    const loadingViewer = new LoadingViewer()
+    van.add(document.body, loadingViewer.element)
+    async function setup() {
+        const htmlViewer = new HtmlViewer()
+        const errorViewer = new ErrorViewer(htmlViewer)
+        const textInput = new TextInput(htmlViewer, errorViewer)
+        const menu = new Menu(htmlViewer)
+        appStyle.setup()
+        van.add(document.body, div({id:'javel-writer-min', style:appStyle.style.bind(appStyle)},
+            textInput.make(),
+            menu.make(),
+            htmlViewer.make(),
+            errorViewer.make(),
+            /*
+            button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
+                onclick:htmlViewer.toggleWritingMode.bind(htmlViewer),
+                },
+                ()=>((htmlViewer.isVertical) ? '縦' : '横')
+            ),
+            htmlViewer.element,
+            errorViewer.element,
+            */
+        ))
+        //focusLooper.setup()
+        focusLooper.setup(textInput.element)
+        textInput.setupAsync().then(()=>loadingViewer.hide())
+    }
+    setup()
+    /*
+    const htmlViewer = new HtmlViewer()
+    const errorViewer = new ErrorViewer(htmlViewer)
+    const textInput = new TextInput(htmlViewer, errorViewer)
+
+    appStyle.setup()
+    van.add(document.body, div({id:'javel-writer-min', style:appStyle.style.bind(appStyle)},
+        textInput.element,
+        button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
+            onclick:htmlViewer.toggleWritingMode.bind(htmlViewer),
+            },
+            ()=>((htmlViewer.isVertical) ? '縦' : '横')
+        ),
+        htmlViewer.element,
+        errorViewer.element,
+    ))
+    focusLooper.setup()
+    //textInput.setup()
+    //textInput.setupAsync()
+//    console.log('setupAsync()開始外側！')
+//    textInput.setupAsync().then(()=>console.log('setupAsync()完了！'))
+//    console.log('setupAsync()完了外側！')
+//    await textInput.setupAsync()
+//    textInput.setupAsync()
+    textInput.setupAsync().then(()=>loadingViewer.hide())
+    */
+})
+</script>
