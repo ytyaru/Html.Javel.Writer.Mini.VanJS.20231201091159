@@ -8,8 +8,31 @@ class TextInput {
         onpaste:async(e)=>this.#onPaste(e),
         oncompositionend:(e)=>this.htmlViewer.ja.val = e.target.value,
         onkeydown:(e)=>this.#onKeydown(e),
+        ondragover:(e)=>{e.preventDefault();e.dataTransfer.dropEffect='copy';},
+        ondrop:async(e)=>this.#onDrop(e),
         },
         this.htmlViewer.ja.val)
+    }
+    async #onDrop(e) {
+        console.log('#onDrop()')
+        e.preventDefault();
+        await DropItem.readFile(e, this.element, this.htmlViewer)
+        //await DropItem.gets(e)
+        /*
+        const files = Array.from(e.dataTransfer.files)
+        const items = Array.from(e.dataTransfer.items)
+        console.log(files)
+        console.log(items)
+        await Promise.all(items.map(item=>{
+            return new Promise((resolve) => {
+                const entry = item.webkitGetAsEntry();
+                if (!entry) {resolve;return;}
+                resolve(searchFile(entry));
+            })}))
+        */
+    }
+    #createDnDObjects() {
+
     }
     get element() { return document.querySelector(`#${this.id}`) }
     #hasError(e) { this.errors = JavelSyntaxError.check(e.target.value); console.log(this.errors.length, this.errors); return 0 < this.errors.length; }
