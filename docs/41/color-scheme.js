@@ -26,6 +26,8 @@ class ColorScheme {
         this.aSelectionBg = '#ff0'
         this.caret = this.fg.val
         this.outline = this.fg.val
+        this.buttonFocusFg = this.bg.val
+        this.buttonFocusBg = this.fg.val
         this.#setCss()
     }
     dark() {
@@ -38,6 +40,8 @@ class ColorScheme {
         this.aSelectionFg = '#008'
         this.caret = this.fg.val
         this.outline = this.fg.val
+        this.buttonFocusFg = this.bg.val
+        this.buttonFocusBg = this.fg.val
         this.#setCss()
     }
     #setCss() {
@@ -51,6 +55,8 @@ class ColorScheme {
         Css.set('--a-selection-background-color', this.aSelectionBg)
         Css.set('--caret-color', this.caret)
         Css.set('--outline-color', this.outline)
+        Css.set('--button-focus-color', this.buttonFocusFg)
+        Css.set('--button-focus-background-color', this.buttonFocusBg)
         console.log(Css.get('--a-color'))
     }
     lightMinBlue() {

@@ -14,6 +14,8 @@
     --outline-color:#fff;
     --outline-style:solid;
     --outline-width:2px;
+    --button-focus-color:#000;
+    --button-focus-background-color:#aa0;
 }
 body {
     overflow-x:hidden;
@@ -27,7 +29,11 @@ body {
     outline-style: var(--outline-style);
     outline-width: var(--outline-width);
 }
-body, textarea {
+button:focus {
+    color: var(--button-focus-color);
+    background-color: var(--button-focus-background-color);
+}
+body, textarea, button {
     font-family: 'Noto Serif JP', 'Source Han Serif JP', 'Noto Color Emoji', serif; 
     font-size: var(--font-size);
     line-height: 1.7em;
