@@ -1,123 +1,39 @@
 (function(){
 const { div, span, h1, p, a, br, button, table, tr, th, td, details, summary } = van.tags
-class Menu {
-    constructor(textInput, htmlViewer) {
-        this.textInput = textInput
+class ErrorViewer {
+    constructor(htmlViewer) {
         this.htmlViewer = htmlViewer
-        this._id = 'menu'
-        this._htmls = van.state(['Loading'])
-        //this.display = van.state('flex')
-        this.display = van.state('grid')
+        this.parser = new JavelParser()
+        this._id = 'error-viewer'
+        this._htmls = van.state(['Nつのエラーがあります。すべて修正するまでプレビューできません。'])
+        this.display = van.state('none')
         this.writingMode = van.state('vertical-rl')
         console.log(this.writingMode.val)
         this.textOrientation = van.state('upright')
         this.overflowX = van.state('auto')
         this.overflowY = van.state('hidden')
     }
-    get isShow() { return 'none'!==this.display.val }
-    //set isShow(v) { this.display.val = (v) ? 'flex' : 'none' }
-    set isShow(v) { this.display.val = (v) ? 'grid' : 'none' }
-    show() { this.display.val = 'grid' }
-    //show() { this.display.val = 'flex' }
+    get isShow() { return 'block'===this.display.val }
+    set isShow(v) { this.display.val = (v) ? 'block' : 'none' }
+    show() { this.display.val = 'block' }
     hide() { this.display.val = 'none' }
     get htmls() { return this._htmls }
     set htmls(v) { if (Type.isArray(v)) { this._htmls.val = [...v] } }// 反応させるには新しい配列にする必要ある。VanJSの仕様
-    /*
     make() { return div({id:this._id, tabindex:0, 
             style:this.#style.bind(this),
-//            onwheel:(e)=>this.#onWheel(e),
-//            onkeydown:(e)=>{if ('Esc'===e.key) { this.textarea.focus() }},
-//        }, ()=>div(this._htmls.val))
-//        }, ()=>div(this.#makeWritingModeButton()))
-//        }, this.#makeWritingModeButton())
-        }, [this.#makeWritingModeButton(), this.#makeColorSchemeButton(), this.#makeExportButton()])
-    }
-    */
-    make() {
-        this.buttons = this.#makeButtons()
-        this.#setGrid()
-        return div({id:this._id,
-            style:this.#style.bind(this),
-//            onwheel:(e)=>this.#onWheel(e),
-            onkeydown:(e)=>{if ('Esc'===e.key) { this.textarea.focus() }},
-        }, this.buttons)
+            onwheel:(e)=>this.#onWheel(e),
+            onkeydown:(e)=>this.#onKeydown(e),
+        }, ()=>div(this._htmls.val))
     }
     get element() { return document.querySelector(`#${this._id}`) }
-    #makeButtons() { return [this.#makeWritingModeButton(), this.#makeColorSchemeButton(), this.#makeExportButton()] }
-    #setGrid() {
-        this.gridTemplateColumns = van.state(`repeat(${this.buttons.length}, 1fr)`)
-        this.gridTemplateRows = van.state(`1fr`)
-    }
-    #makeWritingModeButton() {
-        //return button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
-        return button({id:'writing-mode', type:'button',
-            onclick:this.htmlViewer.toggleWritingMode.bind(this.htmlViewer),
-            },
-            ()=>((this.htmlViewer.isVertical) ? '縦' : '横')
-        )
-    }
-    #makeColorSchemeButton() {
-        //return button({id:'color-scheme', type:'button', style:()=>`box-sizing:border-box;`,
-        return button({id:'color-scheme', type:'button',
-            onclick:()=>colorScheme.toggle()
-            },
-            ()=>((colorScheme.isDark) ? '白' : '黒')
-        )
-    }
-    #makeExportButton() {
-        //return button({id:'export', type:'button', style:()=>`box-sizing:border-box;`,
-        return button({id:'export', type:'button',
-            onclick:()=>{
-                const text = this.textInput.element.value
-                let blob = new Blob([text], {type: 'text/plain' });
-                let url = URL.createObjectURL(blob);
-                let link = document.createElement('a');
-                link.href = url;
-                link.download = 'novel.txt';
-                document.body.appendChild(link);
-                link.click();
-                link.parentNode.removeChild(link)
-            }
-            },
-            ()=>'出'
-        )
-    }
     toggleWritingMode() {
         this.writingMode.val= (this.isVertical) ? 'horizontal-tb' : 'vertical-rl'
         this.overflowX.val = (this.isVertical) ? 'auto' : 'hidden'
         this.overflowY.val = (this.isVertical) ? 'hidden' : 'auto'
         this.textOrientation.val = (this.isVertical) ? 'upright' : 'mixed'
     }
-    setVertical() {
-        this.writingMode.val='vertical-rl'
-        this.overflowX.val = 'hidden'
-        this.overflowY.val = 'auto'
-        this.textOrientation.val = 'upright'
-    }
-    setHorizontal() {
-        this.writingMode.val='horizontal-tb'
-        this.overflowX.val = 'auto'
-        this.overflowY.val = 'hidden'
-        this.textOrientation.val = 'mixed'
-    }
-    set isVertical(v) { if(v) {this.setVertical()} else {this.setHorizontal()} }
-    set isHorizontal(v) { if(v) {this.setHorizontal()} else {this.setVertical()} }
     get isVertical() { return ('vertical-rl'===this.writingMode.val) }
     get isHorizontal() { return ('horizontal-tb'===this.writingMode.val) }
-    get blockSize() {
-        const [W, H, I, B] = this.#sizes
-        const minLineChars = I / 16
-        if (minLineChars <= 30) { return 16 } // Screen<=480px: 16px/1字 1〜30字/行
-        else if (minLineChars <= 40) { return 18 } // Screen<=640px: 18px/1字 26.6〜35.5字/行
-        else { return I / 40 } // Screen<=640px: ?px/1字 40字/行
-    }
-    get #sizes() {
-        const W = document.documentElement.clientWidth
-        const H = document.documentElement.clientHeight
-        const I = (this.isVertical) ? H : W
-        const B = (this.isVertical) ? W : H
-        return [W, H, I, B]
-    }
     #onWheel(e) {
         if ('vertical-rl'===this.writingMode.val) {
             if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
@@ -136,11 +52,7 @@ class Menu {
         }
     }
     // html-viewerは縦書きでHTML表示したいからdiv要素にする。でもdiv要素はfocusが当たらない。なのでtabindex=0を設定した。標準のキー操作だと矢印の上を押し続けるとbody要素へフォーカスが飛んでしまう。なのでキャレットを排除すべくuser-select:none;にして、かつキーイベントでスクロール操作するよう実装した。
-    //#style() { console.log(this.writingMode.val);return `display:${this.display.val};writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
-    //#style() { console.log(this.writingMode.val);return `display:${this.display.val};justify-content:center;align-items:center;writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
-    #style() { console.log(this.writingMode.val);return `display:${this.display.val};grid-template-columns:${this.gridTemplateColumns.val};grid-template-rows:${this.gridTemplateRows.val};justify-content:center;align-items:center;padding:0;margin:0;writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
-
-
+    #style() { console.log(this.writingMode.val);return `display:${this.display.val};writing-mode:${this.writingMode.val};text-orientation:${this.textOrientation.val};box-sizing:border-box;overflow-x:${this.overflowX.val};overflow-y:${this.overflowY.val};user-select:none;` }
     makeHtml(textarea, errors) {
         this.htmls = [
             this.#makeSummary(errors),
@@ -209,6 +121,11 @@ class Menu {
         this.htmlViewer.isShow = !this.isShow
         console.log(this.isShow, this.htmlViewer.isShow)
     }
+    checkError(errors) {
+        while ((m = text.exec(/[\n]{3,}/g)) != null) {
+
+        }
+    }
 }
-window.Menu = Menu
+window.ErrorViewer = ErrorViewer
 })()
