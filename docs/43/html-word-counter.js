@@ -5,10 +5,15 @@ class HtmlWordCounter {
         this._isHeading = false
         this._isRuby = false
         this._isIndent = false
+        this._count = van.state(0)
     }
-    get count() {
+    get state() { return this._count }
+    get size() { return this._count.val }
+    count() {
+    //get count() {
         let count = 0
         for (let el of this.htmlViewer.element.children[0].children) { count += this.#count(el) }
+        this._count.val = count
         return count
     }
     get isHeading() { return this._isHeading }  // h1〜h6を数えるか
@@ -17,6 +22,9 @@ class HtmlWordCounter {
     set isRuby(v) { this._isRuby = v }
     get isIndent() { return this._isIndent }    // p内最初の全角空白を数えるか
     set isIndent(v) { this._isIndent = v }
+    openDialog() {
+        alert('openDialog()')
+    }
     #count(el) {
         const tagName = this.#tagName(el)
         if (this.#isHeading(tagName)) { return this.#countHeading(el) }
@@ -28,7 +36,7 @@ class HtmlWordCounter {
     #countInline(el) {
         let count = 0
         for (let node of el.childNodes) {
-            console.log('node.nodeType:', node.nodeType)
+//            console.log('node.nodeType:', node.nodeType)
             if (3===node.nodeType) { count += node.innerText.Graphemes.length } // 3:TEXT_NODE
             else if (1===node.nodeType) { // 1:ELEMENT_NODE
                 const tagName = this.#tagName(node)

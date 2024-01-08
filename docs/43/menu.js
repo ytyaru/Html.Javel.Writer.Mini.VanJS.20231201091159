@@ -13,6 +13,7 @@ class Menu {
         this.textOrientation = van.state('upright')
         this.overflowX = van.state('auto')
         this.overflowY = van.state('hidden')
+        this._count = van.derive(()=>((this.htmlViewer.wordCounter.state.val < 10000) ? `${this.htmlViewer.wordCounter.state.val}` : `${Math.floor(this.htmlViewer.wordCounter.state.val / 10000)}万${this.htmlViewer.wordCounter.state.val % 10000}`))
     }
     get isShow() { return 'none'!==this.display.val }
     //set isShow(v) { this.display.val = (v) ? 'flex' : 'none' }
@@ -43,14 +44,33 @@ class Menu {
         }, this.buttons)
     }
     get element() { return document.querySelector(`#${this._id}`) }
-    #makeButtons() { return [this.#makeWritingModeButton(), this.#makeColorSchemeButton(), this.#makeExportButton()] }
+    #makeButtons() { return [this.#makeWordCountButton(), this.#makeWritingModeButton(), this.#makeColorSchemeButton(), this.#makeExportButton()] }
     #setGrid() {
         this.gridTemplateColumns = van.state(`repeat(${this.buttons.length}, 1fr)`)
         this.gridTemplateRows = van.state(`1fr`)
     }
+    #makeWordCountButton() {
+        return button({id:'writing-mode', type:'button',
+            onclick:this.htmlViewer.wordCounter.openDialog.bind(this.htmlViewer),
+            },
+            //()=>(`${this.htmlViewer.wordCounter.state.val}字`)
+            //()=>this.#count()
+            //()=>this._count.val
+            ()=>this._count.val + '字'
+        )
+    }
+    #count() {
+        const c = this.htmlViewer.wordCounter.state.val
+        console.log(c)
+        return (c < 10000) ? `${c.val}字` : `${c / 10000}万${c % 10000}字` // 億超えは想定外
+        //return ((c < 10000) ? `${c.val}` : `${c / 10000}万${c % 10000}`) + '字' // 億超えは想定外
+//        (this.htmlViewer.wordCounter.state.val < 10000) ? `${this.htmlViewer.wordCounter.state.val}` : 
+//        `${this.htmlViewer.wordCounter.state.val / 10000}万${this.htmlViewer.wordCounter.state.val % 10000}`
+//        const count = this.htmlViewer.wordCounter.state.val
+    }
     #makeWritingModeButton() {
         //return button({id:'writing-mode', type:'button', style:()=>`box-sizing:border-box;`,
-        return button({id:'writing-mode', type:'button',
+        return button({id:'writing-mode', type:'button', style:()=>`writing-mode:${this.writingMode.val};`,
             onclick:this.htmlViewer.toggleWritingMode.bind(this.htmlViewer),
             },
             ()=>((this.htmlViewer.isVertical) ? '縦' : '横')

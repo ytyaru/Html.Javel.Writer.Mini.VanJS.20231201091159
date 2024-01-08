@@ -19,6 +19,7 @@ class AppStyle {
     }
     setup(menu) {
         this.menu = menu
+        this.#resize()
         new ResizeObserver(entries=>{
             for (let entry of entries) { this.#resize(entry.contentRect.width, entry.contentRect.height) }
         }).observe(document.querySelector('body'));

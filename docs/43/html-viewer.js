@@ -12,6 +12,7 @@ class HtmlViewer {
         this.textOrientation = van.state('upright')
         this.overflowX = van.state('auto')
         this.overflowY = van.state('hidden')
+        this.wordCounter = new HtmlWordCounter(this)
     }
     get isShow() { return 'block'===this.display.val }
     set isShow(v) { this.display.val = (v) ? 'block' : 'none' }

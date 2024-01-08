@@ -1,7 +1,7 @@
 (function(){
 const { textarea } = van.tags
 class TextInput {
-    constructor(htmlViewer, errorViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.errorViewer=errorViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; this.selectedText=null; this.isSelectedEdit=false; this.deletedText=null; this.isBanNewLine=false; this.errors=[]; this.isNotEditInputBlock=false; this.htmlWordCounter=new HtmlWordCounter(htmlViewer); }
+    constructor(htmlViewer, errorViewer) { this.id='manuscript'; this.htmlViewer=htmlViewer; this.errorViewer=errorViewer; this.isComposing=false; this.isCut=false; this.isPaste=false; this.selectedText=null; this.isSelectedEdit=false; this.deletedText=null; this.isBanNewLine=false; this.errors=[]; this.isNotEditInputBlock=false; }
     make() { return (this.element) ? this.element : textarea({id:this.id, placeholder:'原稿', style:()=>`box-sizing:border-box;`,
         oninput:(e)=>this.#onInput(e),
         oncut:(e)=>this.#onCut(e),
@@ -48,14 +48,21 @@ class TextInput {
     }
     #onInput(e) {
         console.log('INPUT !!!!!!!!!', e)
-        if (this.#isComposing(e)) { return }
-        if (this.isCut) { this.isCut=false; return; }
-        if (this.isPaste) { this.isCut=false; return; }
-        if (this.isSelectedEdit) { this.isSelectedEdit=false; return; }
-        if (this.isBanNewLine) { this.isBanNewLine=false; e.preventDefault(); return; }
-        if (this.#checkError(e)) { return }
-        this.#input(e)
-        console.log('文字数：', this.htmlWordCounter.count)
+        if (this.#isComposing(e)) { this.#finish(); return }
+        if (this.isCut) { this.isCut=false; this.#finish(); return; }
+        if (this.isPaste) { this.isCut=false; this.#finish(); return; }
+        if (this.isSelectedEdit) { this.isSelectedEdit=false; this.#finish(); return; }
+        if (this.isBanNewLine) { this.isBanNewLine=false; e.preventDefault(); this.#finish(); return; }
+        if (this.#checkError(e)) { this.#finish(); return }
+        this.#input(e); this.#finish();
+    }
+    #finish() {
+        console.log('文字数：', this.htmlViewer.wordCounter.count())
+        console.log('文字数：', this.htmlViewer.wordCounter.size)
+        console.log('文字数：', this.htmlViewer.wordCounter.state.val)
+//        console.log('文字数：', this.htmlWordCounter.count())
+//        console.log('文字数：', this.htmlWordCounter.size)
+//        console.log('文字数：', this.htmlWordCounter.state.val)
     }
     #onCut(e) {
         console.log('CUT !!!!!!!', e)
@@ -112,6 +119,7 @@ class TextInput {
             case 'Backspace':
             case 'Enter':
                 if (isSelected) {
+                    this.isSelectedEdit = true
                     console.log('範囲選択あり')
                     console.log('Enter===e.key:', 'Enter'===e.key)
                     console.log('1===(end-start):', 1===(end-start))
@@ -122,7 +130,7 @@ class TextInput {
                     const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value, this.htmlViewer.parser.textBlocks)
                     console.log(index, deleteCount, blocks)
                     this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
-                    this.isSelectedEdit = true
+                    //this.isSelectedEdit = true
                     return
                 } else {
                     console.log('範囲選択なし')
@@ -247,6 +255,7 @@ class TextInput {
         this.htmlViewer._htmls.val = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
         //this.htmlViewer.htmls = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
         document.querySelector(`#${this.id}`).addEventListener('compositionend', this.#compositionEnd.bind(this))
+        this.htmlViewer.wordCounter.count()
     }
     /*
     setup() {
@@ -270,6 +279,7 @@ class TextInput {
         this.htmlViewer._htmls.val = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
         //this.htmlViewer.htmls.val = this.htmlViewer.parser.toHtmls(document.querySelector(`#${this.id}`).value)
         document.querySelector(`#${this.id}`).addEventListener('compositionend', this.#compositionEnd.bind(this))
+        this.htmlViewer.wordCounter.count()
     }
     /*
     async setupAsync() {

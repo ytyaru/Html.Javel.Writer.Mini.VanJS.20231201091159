@@ -52,7 +52,7 @@ a::selection {
     background-color: var(--a-selection-background-color);
     text-shadow: none;
 }
-button { user-select:none; font-size:var(--font-size); padding:0; margin:0; }
+button { user-select:none; font-size:var(--font-size); padding:0; margin:0; line-height:1em; letter-spacing:0; word-break:break-word; }
 h1 { font-family: 'Noto Sans JP', 'Source Han Sans JP', 'Noto Color Emoji', sans-serif; }
 em {
     font-style: normal; /* 非イタリック化 */
@@ -105,6 +105,8 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         ))
         focusLooper.setup(textInput.element)
         textInput.setupAsync().then(()=>loadingViewer.hide())
+        textInput.element.dispatchEvent(new Event('input')) // htmlViewer.wordCounter.count()
+        htmlViewer.wordCounter.count()
     }
     setup()
     /*
