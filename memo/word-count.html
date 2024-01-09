@@ -35,7 +35,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
     }
     function calcSize(htmls) { return htmls.reduce((sum, el)=>sum + el.innerText.length, 0) }
     van.add(document.body, textarea({rows:5, cols:40, oninput:(e)=>manuscript.val=e.target.value}, ()=>manuscript.val), button(()=>`${size.val}字`), div(()=>div(htmls.val)))
-    manuscript.val = '# 原稿\n\nこいつは本文だ。'
+    manuscript.val = '# 原稿《げんこう》\n\n　《《ここ》》に書いたテキストは下に表示されます。'
 })
 </script>
 
