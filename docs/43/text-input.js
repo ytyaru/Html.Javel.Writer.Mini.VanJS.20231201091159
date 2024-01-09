@@ -70,6 +70,7 @@ class TextInput {
         const [index, blocks, deleteCount] = TextBlock.cutBlocks(e.target.selectionStart, e.target.selectionEnd, e.target.value.trim(), this.htmlViewer.parser.textBlocks)
         console.log(index, deleteCount, blocks)
         this.htmlViewer.htmls = this.htmlViewer.parser.pasteBlocks(index, blocks, deleteCount)
+        this.#finish();
         this.isCut = true
     }
     #getClipboardText(e) {

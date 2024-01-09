@@ -1,0 +1,42 @@
+<script src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
+<script>
+const {div,h1,p,br,textarea,button} = van.tags
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const manuscript = van.state('')
+    const textBlocks = van.derive(()=>toBlocks(manuscript.val))
+    const htmls = van.derive(()=>toHtml(textBlocks.val))
+    const size = van.derive(()=>calcSize(htmls.val))
+
+    //String.prototype.trimLine = function() { return this.replace(/^[\r|\r?\n]*|[\r|\r?\n]*$/g, '') }
+    String.prototype.trimLine = function() { return this.replace(/^\n*|\n*$/g, '') }
+    function toBlocks(text) {
+        if (0===text.trim().length) { return [] }
+        text = text.replace('\r\n', '\n')
+        text = text.replace('\r', '\n')
+        const blocks = []; let start = 0;
+        for (let match of text.matchAll(/\n\n/gm)) {
+            blocks.push(text.slice(start, match.index).trimLine())
+            start = match.index + 2
+        }
+        blocks.push(text.slice(start).trimLine())
+        return blocks.filter(v=>v)
+    }
+    //function toHtml(blocks) { return blocks.map(b=>((b.startsWith('# ')) ? h1(b.slice(2)) : p(b))) }
+    function toHtml(blocks) { return blocks.map(b=>((b.startsWith('# ')) ? h1(inline(b.slice(2))) : p(inline(b)))) }
+    function inline(block) { 
+        const inlines = []; let start = 0;
+        for (let match of block.matchAll(/\n/gm)) {
+            inlines.push(block.slice(start, match.index).trimLine())
+            inlines.push(br)
+            start = match.index + 1
+        }
+        inlines.push(block.slice(start).trimLine())
+        return inlines.filter(v=>v)
+    }
+    function calcSize(htmls) { return htmls.reduce((sum, el)=>sum + el.innerText.length, 0) }
+    van.add(document.body, textarea({rows:5, cols:40, oninput:(e)=>manuscript.val=e.target.value}, ()=>manuscript.val), button(()=>`${size.val}字`), div(()=>div(htmls.val)))
+    manuscript.val = '# 原稿\n\nこいつは本文だ。'
+})
+</script>
+
+<h1>文字数カウントのためのvan.state()関係確認</h1>
