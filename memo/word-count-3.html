@@ -18,7 +18,7 @@
     --button-focus-background-color:#00a;
 }
 body { padding:0; margin:0; }
-body, textarea {
+body, textarea, {
     font-family: 'Noto Serif JP', 'Source Han Serif JP', 'Noto Color Emoji', serif; 
     font-size: var(--font-size);
     line-height: 1.7em;
@@ -115,7 +115,8 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         else if (minLineChars <= 40) { Css.set('--font-size', '18px'); return; } // Screen<=640px: 18px/1字 26.6〜35.5字/行
         else { Css.set('--font-size', `${uiWidth / 40}px`); return; } // Screen<=640px: ?px/1字 40字/行
     }
-    van.add(document.body, div({style:()=>style()}, textarea({rows:5, cols:40, oninput:(e)=>manuscript.val=e.target.value}, ()=>manuscript.val), button(()=>`${size.val}字`), div(()=>div(htmls.val))))
+    //van.add(document.body, div({style:()=>style()}, textarea({rows:5, cols:40, oninput:(e)=>manuscript.val=e.target.value}, ()=>manuscript.val), button(()=>`${size.val}字`), div(()=>div(htmls.val))))
+    van.add(document.body, div({style:()=>style()}, textarea({rows:5, cols:40, oninput:(e)=>manuscript.val=e.target.value}, ()=>manuscript.val), button(()=>`${size.val}字`), ()=>div(htmls.val)))
     manuscript.val = `# 原稿《げんこう》
 
 　《《ここ》》に書いたテキストは下に表示《ひょうじ》されます。
