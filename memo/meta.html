@@ -1,0 +1,28 @@
+<script src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
+<script src="../docs/lib/van-x/0.1.3/nomodule.min.js"></script>
+<script src="../docs/lib/js-yaml/4.1.0/min.js"></script>
+<script>
+const {div,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
+window.addEventListener('DOMContentLoaded', async(event) => {
+    class Meta {
+        constructor(title, catchCopy, intro) {
+            this.title = title
+            this.catch = catchCopy
+            this.intro = intro
+        }
+        get htmls() { return [
+            h1(this.title),
+            h2(this.catch),
+            p(this.intro),
+        ]}
+        get yaml() { return `---\n${jsyaml.dump({title:this.title, catch:this.catch, intro:this.intro})}---` }
+    }
+    const meta = vanX.reactive(new Meta('タイトル', 'キャッチコピー', '紹介文'))
+    van.add(document.body, div(div(table(
+        tr(th('タイトル'), td(input({placeholder:'タイトル',value:'タイトル',oninput:(e)=>meta.title=e.target.value}))), 
+        tr(th('キャッチコピー'), td(input({placeholder:'キャッチコピー',value:'キャッチコピー',oninput:(e)=>meta.catch=e.target.value}))), 
+        tr(th('紹介文'), td(input({placeholder:'紹介文',value:'紹介文',oninput:(e)=>meta.intro=e.target.value}))), 
+    )), div(()=>div(meta.htmls)), pre(()=>meta.yaml)))
+})
+</script>
+

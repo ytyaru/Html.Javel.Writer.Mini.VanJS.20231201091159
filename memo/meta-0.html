@@ -1,0 +1,240 @@
+<script src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
+<script src="../docs/lib/van-x/0.1.3/nomodule.min.js"></script>
+<script src="../docs/lib/js-yaml/4.1.0/min.js"></script>
+<script>
+const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
+window.addEventListener('DOMContentLoaded', async(event) => {
+    class Author {
+        constructor(name, cryptos, services) {
+            this.name = name
+            this.cryptos = cryptos
+            this.services = services
+            this.dates = dates
+            this.uuid = null
+        }
+    }
+    class WebService {
+        static ITEMS = [
+            {index:0, category:'hosting', name:'GitHub', url:{domain:'github.com', top:'https://github.com/', userPage:`{{account.name}}`}},
+            {index:1, category:'sns', name:'Mastodon', url:{domain:'mstdn.jp', top:'https://mstdn.jp/', userPage:`@{{account.name}}`}},
+        ]
+        static make(meta) { return table(this.#trs()) }
+        static #trs() { return WebService.ITEMS.map((item,i)=>tr(
+            th(van.tags.label(van.tags.a({href:item.url.top, target:'_blank', rel:'noopener noreferrer'}, item.name))), 
+            td(van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>meta.author.webServices[i].username.val = e.target.value}))
+        ))}
+        /*
+        get selected() { return this._selected }
+        get selectedItem() { return WebService.ITEMS[this._selected] }
+        get account() { return this._account }
+        constructor(selected, username) {
+            this._selected = (selected) ? selected : 0
+            this._username = username // user[id/name]
+            //this._account = account
+        }
+        make(meta) { return [
+            van.tags.label(van.tags.a({href:this.selectedItem.url.top, target:'_blank', rel='noopener noreferrer'}, this.selectedItem.name),
+            van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>meta.author.webServices[i]._username = e.target.value})
+
+        ] }
+        */
+    }
+    class Sns {
+        constructor(name, url, makeUserPageUrl) {
+            this.name = name
+            this.url = url
+            this.userPageUrl = makeUserPageUrl || this.makeUserPageUrl
+        }
+        //makeUserPageUrl() { return `${this.url}${this.name}` }
+        makeUserPageUrl() { return `${this.url}${this.name}` }
+    }
+    class Account {
+        constructor(id, name) {
+            this.id = id
+            this.name = name
+        }
+    }
+    class CryptoAssets {
+        static ITEMS = [
+            {index:0, abbr:'MONA', url:'https://ja.wikipedia.org/wiki/Monacoin'},
+            {index:1, abbr:'BTC', url:'https://ja.wikipedia.org/wiki/%E3%83%93%E3%83%83%E3%83%88%E3%82%B3%E3%82%A4%E3%83%B3'},
+            {index:2, abbr:'LTC', url:'https://ja.wikipedia.org/wiki/%E3%83%A9%E3%82%A4%E3%83%88%E3%82%B3%E3%82%A4%E3%83%B3'},
+            {index:3, abbr:'ETH', url:'https://ja.wikipedia.org/wiki/%E3%82%A4%E3%83%BC%E3%82%B5%E3%83%AA%E3%82%A2%E3%83%A0'},
+            {index:4, abbr:'SOL', url:'https://en.wikipedia.org/wiki/Solana_(blockchain_platform)'},
+            {index:5, abbr:'DOGE', url:'https://ja.wikipedia.org/wiki/%E3%83%89%E3%83%BC%E3%82%B8%E3%82%B3%E3%82%A4%E3%83%B3'},
+        ]
+        //TYPES = ['MONA','BTC','LTC','ETH','SOL','DOGE']
+        constructor(type, address) {
+            this.type = type
+            this.address = address
+        }
+        static make(meta) { return table(this.#trs()) }
+        static #trs() { return this.ITEMS.map((item,i)=>tr(
+            th(van.tags.label(van.tags.a({href:item.url, target:'_blank', rel:'noopener noreferrer'}, item.abbr))), 
+            td(van.tags.input({id:`crypto-assets-${i}`, placeholder:'アドレス', oninput:(e)=>meta.author.cryptoAssets[i].address.val = e.target.value}))
+        ))}
+    }
+    class Dates {
+        constructor(created, published, updated, expiration) {
+            this.created = ((created) ? created : new Date())
+            this.published = published
+            this.updated = updated
+            this.expiration = expiration
+        }
+        ymdhms(d,s1='-',s2=' ',s3=':') { return `${this.ymd(d, s1)}${s2}${this.hms(d, s3)}` }
+        ymd(d,s='-') { return `${d.getFullYear()}${s}${d.getMonth()+1}${s}${d.getDate()}` }
+        hms(d,s=':') { return `${d.getHours()}${s}${d.getMinutes()}${s}${d.getSeconds()}` }
+        md(d,s='-') { return `${d.getMonth()+1}${s}${d.getDate()}` }
+        hm(d,s=':') { return `${d.getHours()}${s}${d.getMinutes()}${s}${d.getSeconds()}` }
+        ms(d,s=':') { return `${d.getHours()}${s}${d.getMinutes()}${s}${d.getSeconds()}` }
+    }
+    class Revision {
+        constructor(ver, created, patch, summary) {
+            this.version = ver
+            this.created = created
+            this.patch = patch
+            this.summary = summary
+        }
+    }
+    /*
+    class Category {
+        static LABEL = 'カテゴリ'
+        static ITEMS = [
+            {name: '文学', summary:'人間の醜さや悲劇を描いた小説。', comment:'芸術性を重視'},
+            {name: '一般文芸', summary:'物語の面白さを追求した小説。', comment:'娯楽性を重視'},
+            {name: 'ライト文芸', summary:'現実味のあるライトノベル小説。', comment:'大人用ラノベ'},
+            {name: 'ライトノベル', summary:'登場人物の面白さを追求した小説。', comment:'思春期向け。非現実的な設定。平易な文体。'},
+            {name: '児童', summary:'12歳以下の児童向け小説。', comment:'子供用小説'},
+        ]
+        static _selected = van.state(1)
+        static _summary = van.derive(()=>this.ITEMS[this._selected.val].summary)
+        static _comment = van.derive(()=>this.ITEMS[this._selected.val].comment)
+        static make(meta) { return div(select({id:'category', title:()=>this._comment.val, onchange:(e)=>{
+            console.log(this._selected.val);
+            this._selected.val = e.target.value
+            meta.category = this.selectedItem.name
+        }}, this.#options), span(this._summary)) }
+        static get #options() { return this.ITEMS.map((item,i)=>option({title:item.summary, value:i}, item.name)) }
+        static get selectedItem() { return this.ITEMS[this._selected.val] }
+    }
+    class Genre {
+        static LABEL = 'ジャンル'
+        static ITEMS = [
+            {name: 'ファンタジー', summary:'剣・魔法・ドラゴン等が存在する世界での冒険譚。', comment: ''},
+            {name: 'SF', summary:'科学的根拠をベースにした物語。', comment: '誰が犯人か、どんな手口か、動機は何か。'},
+            {name: '推理', summary:'謎解きが主題の小説。', comment: ''},
+            {name: 'ホラー', summary:'恐怖が主題の小説。', comment: '怪談、幽霊、妖怪、呪い、ゾンビ、ウイルス、パニック'},
+            {name: '恋愛', summary:'恋愛を主軸においた物語。', comment: ''},
+            {name: '青春', summary:'学生が主人公の物語。', comment: ''},
+            {name: '歴史/時代', summary:'歴史を物語にした小説。', comment: '史実→"歴史"／創作→"時代"'},
+            {name: '経済', summary:'経済の仕組みや労働問題を扱う物語。', comment: ''},
+            {name: '政治', summary:'政治的出来事を扱った物語。', comment: ''},
+            {name: '官能', summary:'性描写が主題の小説。', comment: ''},
+            {name: 'ノンフィクション', summary:'事実に基づいた物語。', comment: ''},
+            {name: '随筆', summary:'見聞・思索・感想などを気ままに記した文章。', comment: 'エッセイ、日記、雑記、私小説', details:'話の筋道が整合的な体系に回収されてしまうことを何より忌避して、複数の論理や断片的な思考に積極的に身を任せ、脱線や逸脱や逡巡をいとわない。安直な全体化に執拗に抵抗する、そんな自由な思考の「試み」にこそ、エッセイというジャンルの本質がある'},
+        ]
+        static _selected = van.state(0)
+        static _summary = van.derive(()=>this.ITEMS[this._selected.val].summary)
+        static _comment = van.derive(()=>this.ITEMS[this._selected.val].comment)
+        static make(meta) { return div(select({id:'category', title:()=>this._comment.val, onchange:(e)=>{
+            console.log(this._selected.val);
+            this._selected.val = e.target.value
+            meta.genre = this.selectedItem.name
+        }}, this.#options), span(this._summary)) }
+        static get #options() { return this.ITEMS.map((item,i)=>option({title:item.summary, value:i}, item.name)) }
+        static get selectedItem() { return this.ITEMS[this._selected.val] }
+
+    }
+    */
+    class SelectElement {
+        constructor(label, items, setFn, selectedIndex=0) {
+            this._label = label
+            this._items = items
+            this._setFn = setFn
+            this._selected = van.state(selectedIndex)
+            this._summary = van.derive(()=>this._items[this._selected.val].summary)
+            this._comment = van.derive(()=>this._items[this._selected.val].comment)
+            this._details = van.derive(()=>this._items[this._selected.val].details)
+        }
+        get label() { return this._label }
+        make(meta) { return div(van.tags.select({title:()=>this._comment.val, onchange:(e)=>{
+            console.log(this._selected.val);
+            this._selected.val = e.target.value
+            this._setFn(meta, this.selectedItem) // meta.genre = this.selectedItem.name
+        //}}, this.#options), span(this._summary)) }
+        }}, this.#options), van.tags.details({style:'display:inline-block;'},van.tags.summary(this._summary), this._details)) }
+        get #options() { return this._items.map((item,i)=>van.tags.option({title:item.summary, value:i}, item.name)) }
+        get selectedItem() { return this._items[this._selected.val] }
+    }
+    const Category = new SelectElement('カテゴリ', [
+        {name: '文学', summary:'人間の醜さや悲劇を描いた小説。', comment:'芸術性を重視', details:'純文学。学問でない散文で、芸術性のある文章。'},
+        {name: '一般文芸', summary:'物語の面白さを追求した小説。', comment:'娯楽性を重視', details:'大衆文学。文学よりも娯楽性を重視した文章。'},
+        {name: 'ライト文芸', summary:'現実味のあるライトノベル小説。', comment:'大人用ラノベ', details:'大人用ラノベ。一般文芸＋ライトノベル。ラノベと同様にキャラクターを売りにしつつ、より現実味がある文章。'},
+        {name: 'ライトノベル', summary:'登場人物の面白さを追求した小説。', comment:'思春期向け。非現実的な設定。平易な文体。', details:'思春期向け。非現実的な設定。平易な文体。ハッピーエンド。多幸感。ストレスフリー。頭を空っぽにしてスラスラ読める。不快な展開がなく快感ばかり。'},
+        {name: '児童', summary:'12歳以下の児童向け小説。', comment:'子供用小説', details:''},
+    ], (meta,item)=>meta.category=item.name)
+    const Genre = new SelectElement('ジャンル', [
+        {name: 'ファンタジー', summary:'剣・魔法・ドラゴン等が存在する世界での冒険譚。', comment: '', details:''},
+        {name: 'SF', summary:'科学的根拠をベースにした物語。', comment: '誰が犯人か、どんな手口か、動機は何か。', details:''},
+        {name: '推理', summary:'謎解きが主題の小説。', comment: '', details:''},
+        {name: 'ホラー', summary:'恐怖が主題の小説。', comment: '怪談、幽霊、妖怪、呪い、ゾンビ、ウイルス、パニック', details:''},
+        {name: '恋愛', summary:'恋愛を主軸においた物語。', comment: '', details:''},
+        {name: '青春', summary:'学生が主人公の物語。', comment: '', details:''},
+        {name: '歴史/時代', summary:'歴史を物語にした小説。', comment: '史実→"歴史"／創作→"時代"', details:''},
+        {name: '経済', summary:'経済の仕組みや労働問題を扱う物語。', comment: '', details:''},
+        {name: '政治', summary:'政治的出来事を扱った物語。', comment: '', details:''},
+        {name: '官能', summary:'性描写が主題の小説。', comment: '', details:''},
+        {name: 'ノンフィクション', summary:'事実に基づいた物語。', comment: '', details:''},
+        {name: '随筆', summary:'見聞・思索・感想などを気ままに記した文章。', comment: 'エッセイ、日記、雑記、私小説', details:'話の筋道が整合的な体系に回収されてしまうことを何より忌避して、複数の論理や断片的な思考に積極的に身を任せ、脱線や逸脱や逡巡をいとわない。安直な全体化に執拗に抵抗する、そんな自由な思考の「試み」にこそ、エッセイというジャンルの本質がある。'},
+    ], (meta,item)=>meta.genre=item.name)
+
+    console.log(CryptoAssets.ITEMS)
+    class Meta {
+        constructor(title, catchCopy, intro, category, genre) {
+            this.title = title
+            this.catch = catchCopy
+            this.intro = intro
+            this.category = category // 小説（文学、一般文芸、ライト文芸、ライトノベル、児童）
+            this.genre = genre // ファンタジー、SF、推理、ホラー、恋愛、青春、歴史、経済、政治、官能、随筆、ノンフィクション
+            this.author = {
+                name: '',
+                webServices: WebService.ITEMS.map(item=>({'username':van.state('')})),
+                cryptoAssets: CryptoAssets.ITEMS.map(item=>({'address':van.state('')})),
+            }
+            console.log(Object.keys(this))
+        }
+        get htmls() { return [
+            h1(this.title),
+            h2(this.catch),
+            p(this.category),
+            p(this.genre),
+            p(()=>div(this.author.webServices.map((item,i)=>`${WebService.ITEMS[i].name}:${item.username.val}`))),
+            p(()=>div(this.author.cryptoAssets.map((item,i)=>`${CryptoAssets.ITEMS[i].abbr}:${item.address.val}`))),
+        ]}
+        get yaml() { return `---\n${jsyaml.dump({title:this.title, catch:this.catch, intro:this.intro, category:this.category, genre:this.genre, author:{name:this.author.name}})}---` }
+        get #webServiceYaml() { this.author.cryptoAssets.filter(item=>item.username.val).map(item=>({}))
+    }
+    const meta = vanX.reactive(new Meta('タイトル', 'キャッチコピー', '紹介文', Category.selectedItem.name, Genre.selectedItem.name))
+    console.log(Object.keys(meta))
+    console.log(Object.getOwnPropertyDescriptor(meta, "property"))
+    van.add(document.body, div(div(table(
+        tr(th('タイトル'), td(input({placeholder:'タイトル',value:'タイトル',oninput:(e)=>meta.title=e.target.value}))), 
+        tr(th('ｷｬｯﾁｺﾋﾟｰ'), td(input({placeholder:'キャッチコピー',value:'キャッチコピー',oninput:(e)=>meta.catch=e.target.value}))), 
+        tr(th('紹介文'), td(input({placeholder:'紹介文',value:'紹介文',oninput:(e)=>meta.intro=e.target.value}))), 
+        tr(th(Category.label), td(()=>Category.make(meta))), 
+        tr(th(Genre.label), td(()=>Genre.make(meta))), 
+    )), div(()=>div(meta.htmls)), pre(()=>meta.yaml)))
+    van.add(document.body, div(div(table(
+        tr(th('著者名'), td(input({placeholder:'山田《やまだ》太郎《たろう》',value:'山田《やまだ》太郎《たろう》',oninput:(e)=>meta.author.name=e.target.value}))), 
+        tr(th('外部'), td(WebService.make(meta))),
+        tr(th('暗号通貨'), td(CryptoAssets.make(meta))), 
+    )), div(()=>div(meta.htmls)), pre(()=>meta.yaml)))
+    function makeWork() { return 
+
+    }
+    function makeAuthor() { return 
+
+    }
+})
+</script>
+
