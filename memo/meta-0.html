@@ -5,16 +5,6 @@
 const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
 window.addEventListener('DOMContentLoaded', async(event) => {
     /*
-    vanX.reactive({
-        'github': '',
-        'mastodon-mstdn.jp': '',
-    })
-    vanX.reactive({
-        'github': 'username',
-        'mastodon-mstdn.jp': 'username',
-    })
-
-
     class Author {
         constructor(name, services, cryptos) {
             this.name = van.state(((name) ? name : ''))
@@ -24,7 +14,6 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             this.uuid = null
         }
     }
-    */
     class Author {
         constructor(name, cryptos, services) {
             this.name = name
@@ -33,6 +22,32 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             this.dates = dates
             this.uuid = null
         }
+    }
+    */
+    class Author {
+        constructor() {
+            this.name = van.state('')
+            this.cryptos = CryptoAssets.reactive()
+            this.services = WebService.reactive()
+//            this.dates = dates
+//            this.uuid = null
+        }
+        get htmls() { return [
+            p(this.name),
+            p(()=>div(this.services)),
+            p(()=>div(this.cryptos)),
+//            p(()=>div(this.webServices.map((item,i)=>`${WebService.ITEMS[i].name}:${item.username.val}`))),
+//            p(()=>div(this.cryptoAssets.map((item,i)=>`${CryptoAssets.ITEMS[i].abbr}:${item.address.val}`))),
+        ]}
+        //get yaml() { return jsyaml.dump({name:this.name, serveces:this.services, cryptos:this.cryptos}) }
+        get yaml() { return jsyaml.dump({name:this.name.val}) }
+        //get yaml() { return `---\n${jsyaml.dump({title:this.title, catch:this.catch, intro:this.intro, category:this.category, genre:this.genre, author:{name:this.author.name, webServices:this.#webServiceYaml }})}---` }
+        //get #webServiceYaml() { return this.author.cryptoAssets.filter(item=>item.username.val).map(item=>({'type':WebService.ITEMS[item.index].name, 'address':item.username.val})) }
+        //get #webServiceYaml() { return this.author.cryptoAssets.filter(item=>item.username.val).map(item=>{console.log(item);return ({'type':WebService.ITEMS[item.index].name, 'address':item.username.val});}) }
+        get #webServiceYaml() { return this.author.webServices.filter(item=>item.username.val).map(item=>{
+            console.log(item);
+            return ({'type':WebService.ITEMS[item.index].name, 'address':item.username.val});
+        }) }
     }
     class WebService {
         /*
@@ -47,20 +62,20 @@ window.addEventListener('DOMContentLoaded', async(event) => {
                 {domain:'mstdn.jp', top:'https://mstdn.jp/', userPage:`@{{account.name}}`},
                 {domain:'mastodon-japan.net', top:'https://mastodon-japan.net/', userPage:`@{{account.name}}`},
             ]},
+            {index:1, category:'sns', name:'Misskey', url:{wikipedia:'https://ja.wikipedia.org/wiki/Misskey'}, instances:[
+                {domain:'nijimiss.moe', top:'https://nijimiss.moe/', userPage:`@{{account.name}}`},
+                {domain:'misskey-square.net', top:'https://misskey-square.net/', userPage:`@{{account.name}}`},
+            ]},
         ]
-        /*
-        static reactive() {
+        static reactive() { // vanX.reactive({Service-Instance:User, ...})
             const obj = {}
-            obj[item.name.toLowerCase()]
-            {...}
-            Object.assing(obj, )
-            this.ITEMS.map(item=>obj)
-            return vanX.reactive({
-
-            })
+            const getKeys = (item)=>((item.hasOwnProperty('instances') ? item.instances.map(ins=>`${item.name}-${item.name}`) : [item.name]))
+            const keys = this.ITEMS.map(item=>getKeys(item)).flat().map(k=>k.toLowerCase())
+            console.log(keys)
+            for (let k of keys) { obj[k] = '' }
+            return vanX.reactive(obj)
         }
-        */
-        static #url(item) { return ((item.hasOwnProperty('instances')) ? this.#hasInstanceTrs(item) : this.#tr(item)) }
+//        static #url(item) { return ((item.hasOwnProperty('instances')) ? this.#hasInstanceTrs(item) : this.#tr(item)) }
         static make(meta) { return table(this.#trs(meta)) }
         static #trs(meta) { return WebService.ITEMS.map((item,i)=>((item.hasOwnProperty('instances')) ? this.#hasInstanceTrs(item, i) : this.#tr(item, i))) }
         //static #trs(meta) { return WebService.ITEMS.map((item,i)=>tr( ((item.hasOwnProperty('instances')) ? this.#hasInstanceTr(item, i) : this.#tr(item, i))  )) }
@@ -194,6 +209,11 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             th(van.tags.label(van.tags.a({href:item.url, target:'_blank', rel:'noopener noreferrer'}, item.abbr))), 
             td(van.tags.input({id:`crypto-assets-${i}`, placeholder:'アドレス', oninput:(e)=>meta.author.cryptoAssets[i].address.val = e.target.value}))
         ))}
+        static reactive() { // vanX.reactive({Abbr:Address, ...})
+            const obj = {}
+            for (let item of this.ITEMS) { obj[item.abbr] = '' }
+            return vanX.reactive(obj)
+        }
     }
     class Dates {
         constructor(created, published, updated, expiration) {
@@ -310,6 +330,32 @@ window.addEventListener('DOMContentLoaded', async(event) => {
     ], (meta,item)=>meta.genre=item.name)
 
     console.log(CryptoAssets.ITEMS)
+    /*
+    class WorkState {
+        constructor(title, catchCopy, intro, category, genre) {
+            this.title = title
+            this.catch = catchCopy
+            this.intro = intro
+            this.category = category // 小説（文学、一般文芸、ライト文芸、ライトノベル、児童）
+            this.genre = genre // ファンタジー、SF、推理、ホラー、恋愛、青春、歴史、経済、政治、官能、随筆、ノンフィクション
+        }
+        get htmls() { return [
+            h1(this.title),
+            h2(this.catch),
+            p(this.category),
+            p(this.genre),
+        ]}
+        get yaml() { return jsyaml.dump({title:this.title, catch:this.catch, intro:this.intro, category:this.category, genre:this.genre, author:{'name':this.author.name }}) }
+    }
+    class Meta {
+        constructor(title, catchCopy, intro, category, genre) {
+            this.work = vanX.reactive(new WorkState(title, catchCopy, intro, category, genre))
+            this.author = new AuthorState()
+//            this.cryptos = CryptoAssets.reactive()
+//            this.services = WebService.reactive()
+        }
+    }
+    */
     class Meta {
         constructor(title, catchCopy, intro, category, genre) {
             this.title = title
@@ -357,11 +403,12 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         tr(th(Category.label), td(()=>Category.make(meta))), 
         tr(th(Genre.label), td(()=>Genre.make(meta))), 
     )), div(()=>div(meta.htmls)), pre(()=>meta.yaml)))
+    const author = new Author()
     van.add(document.body, div(div(table(
-        tr(th('著者名'), td(input({placeholder:'山田《やまだ》太郎《たろう》',value:'山田《やまだ》太郎《たろう》',oninput:(e)=>meta.author.name=e.target.value}))), 
-        tr(th('外部'), td(WebService.make(meta))),
-        tr(th('暗号通貨'), td(CryptoAssets.make(meta))), 
-    )), div(()=>div(meta.htmls)), pre(()=>meta.yaml)))
+        tr(th('著者名'), td(input({placeholder:'山田《やまだ》太郎《たろう》',value:'山田《やまだ》太郎《たろう》',oninput:(e)=>author.name.val=e.target.value}))), 
+        tr(th('外部'), td(WebService.make(author))),
+        tr(th('暗号通貨'), td(CryptoAssets.make(author))), 
+    )), div(()=>div(author.htmls)), pre(()=>author.yaml)))
     function makeWork() { return 
 
     }
