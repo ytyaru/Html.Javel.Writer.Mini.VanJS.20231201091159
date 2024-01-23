@@ -4,6 +4,27 @@
 <script>
 const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
 window.addEventListener('DOMContentLoaded', async(event) => {
+    /*
+    vanX.reactive({
+        'github': '',
+        'mastodon-mstdn.jp': '',
+    })
+    vanX.reactive({
+        'github': 'username',
+        'mastodon-mstdn.jp': 'username',
+    })
+
+
+    class Author {
+        constructor(name, services, cryptos) {
+            this.name = van.state(((name) ? name : ''))
+            this.services = vanX.reactive(services.map())services
+            this.cryptos = vanX.reactive((cryptos) ? cryptos : )
+            this.dates = dates
+            this.uuid = null
+        }
+    }
+    */
     class Author {
         constructor(name, cryptos, services) {
             this.name = name
@@ -14,11 +35,36 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         }
     }
     class WebService {
+        /*
         static ITEMS = [
             {index:0, category:'hosting', name:'GitHub', url:{domain:'github.com', top:'https://github.com/', userPage:`{{account.name}}`}},
             {index:1, category:'sns', name:'Mastodon', url:{domain:'mstdn.jp', top:'https://mstdn.jp/', userPage:`@{{account.name}}`}},
         ]
+        */
+        static ITEMS = [
+            {index:0, category:'hosting', name:'GitHub', url:{domain:'github.com', top:'https://github.com/', userPage:`{{account.name}}`}},
+            {index:1, category:'sns', name:'Mastodon', url:{wikipedia:'https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B9%E3%83%88%E3%83%89%E3%83%B3_(%E3%83%9F%E3%83%8B%E3%83%96%E3%83%AD%E3%82%B0)'}, instances:[
+                {domain:'mstdn.jp', top:'https://mstdn.jp/', userPage:`@{{account.name}}`},
+                {domain:'mastodon-japan.net', top:'https://mastodon-japan.net/', userPage:`@{{account.name}}`},
+            ]},
+        ]
+        /*
+        static reactive() {
+            const obj = {}
+            obj[item.name.toLowerCase()]
+            {...}
+            Object.assing(obj, )
+            this.ITEMS.map(item=>obj)
+            return vanX.reactive({
+
+            })
+        }
+        */
+        static #url(item) { return ((item.hasOwnProperty('instances')) ? this.#hasInstanceTrs(item) : this.#tr(item)) }
         static make(meta) { return table(this.#trs(meta)) }
+        static #trs(meta) { return WebService.ITEMS.map((item,i)=>((item.hasOwnProperty('instances')) ? this.#hasInstanceTrs(item, i) : this.#tr(item, i))) }
+        //static #trs(meta) { return WebService.ITEMS.map((item,i)=>tr( ((item.hasOwnProperty('instances')) ? this.#hasInstanceTr(item, i) : this.#tr(item, i))  )) }
+        /*
         static #trs(meta) { return WebService.ITEMS.map((item,i)=>tr(
             th(van.tags.label(van.tags.a({href:item.url.top, target:'_blank', rel:'noopener noreferrer'}, item.name))), 
             //td(van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>meta.author.webServices[i].username.val = e.target.value}))
@@ -27,9 +73,77 @@ window.addEventListener('DOMContentLoaded', async(event) => {
                 console.log(e, e.target.value, i);
                 meta.author.webServices[i].username.val = e.target.value;
                 console.log(meta.author.webServices[i].username.val);
+                console.log(meta.author.webServices[i].username);
                 //console.log(meta.author.webServices[i].username.val, i, meta.author.webServices[i].username, meta.author.webServices, meta.author);
             }}))
         ))}
+        */
+        static #tr(item, i) { return [
+            th({colspan:2},van.tags.label(van.tags.a({href:item.url.top, target:'_blank', rel:'noopener noreferrer'}, item.name))), 
+            //td(van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>meta.author.webServices[i].username.val = e.target.value}))
+            //td(van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{meta.author.webServices[i].username.val = e.target.value;console.log(e, e.target.value, i, meta.author.webServices[i].username.val, i, meta.author.webServices[i].username, meta.author.webServices, meta.author);}}))
+            td(van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
+                console.log(e, e.target.value, i);
+                meta.author.webServices[i].username.val = e.target.value;
+                console.log(meta.author.webServices[i].username.val);
+                console.log(meta.author.webServices[i].username);
+                //console.log(meta.author.webServices[i].username.val, i, meta.author.webServices[i].username, meta.author.webServices, meta.author);
+            }}))
+        ]}
+        static #hasInstanceTrs(item, i) { return item.instances.map((ins,k)=>tr(this.#instanceTrContents(item, i, ins, k))) }
+        /*
+        static #hasInstanceTrs(item, i) { 
+            const trs = item.instances.map((ins,k)=>tr(
+                th(van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain))), 
+                td(van.tags.input({id:`webservice-${i}-${k}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
+                    console.log(e, e.target.value, i);
+                    meta.author.webServices[i].username.val = e.target.value;
+                    console.log(meta.author.webServices[i].username.val);
+                    console.log(meta.author.webServices[i].username);
+                }}))
+            ))
+            return [th({rowspan:item.instances.length},van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name))),
+       }
+       */
+       static #instanceTrContents(item, i, ins, k) {
+            const contens = []
+            if (0===k) { contens.push(th({rowspan:item.instances.length},van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name)))) }
+            contens.push(th(van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain))))
+            contens.push(td(van.tags.input({id:`webservice-${i}-${k}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
+                    console.log(e, e.target.value, i);
+                    meta.author.webServices[i].username.val = e.target.value;
+                    console.log(meta.author.webServices[i].username.val);
+                    console.log(meta.author.webServices[i].username);
+            }})))
+            return contens
+       }
+
+        /*
+        static #hasInstanceTrs(item, i) { return [
+            th({rowspan:item.instances.length},van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name))), 
+            ...item.instances.map((ins,k)=>[
+                th(van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain))), 
+                td(van.tags.input({id:`webservice-${i}-${k}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
+                    console.log(e, e.target.value, i);
+                    meta.author.webServices[i].username.val = e.target.value;
+                    console.log(meta.author.webServices[i].username.val);
+                    console.log(meta.author.webServices[i].username);
+                }}))
+            ])
+        ] }
+        */
+        /*
+            return 
+            th(van.tags.label(van.tags.a({href:ins.url.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain))), 
+            td(van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
+                console.log(e, e.target.value, i);
+                meta.author.webServices[i].username.val = e.target.value;
+                console.log(meta.author.webServices[i].username.val);
+                console.log(meta.author.webServices[i].username);
+                //console.log(meta.author.webServices[i].username.val, i, meta.author.webServices[i].username, meta.author.webServices, meta.author);
+            }}))
+        }
+        */
         /*
         get selected() { return this._selected }
         get selectedItem() { return WebService.ITEMS[this._selected] }
@@ -205,12 +319,16 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             this.genre = genre // ファンタジー、SF、推理、ホラー、恋愛、青春、歴史、経済、政治、官能、随筆、ノンフィクション
             this.author = {
                 name: '',
-                webServices: WebService.ITEMS.map(item=>({'username':van.state('')})),
-                cryptoAssets: CryptoAssets.ITEMS.map(item=>({'address':van.state('')})),
+                webServices: WebService.ITEMS.map(item=>({'username':''})),
+                cryptoAssets: CryptoAssets.ITEMS.map(item=>({'address':''})),
+//                webServices: WebService.ITEMS.map(item=>({'username':van.state('')})),
+//                webServices: WebService.ITEMS.map(item=>({'username':van.state('')})),
+//                cryptoAssets: CryptoAssets.ITEMS.map(item=>({'address':van.state('')})),
             }
             console.log(Object.keys(this))
 //            console.log(Object.keys(this), this.#webServiceYaml())
             console.log(this.#webServiceYaml)
+            console.log(this.author)
         }
         get htmls() { return [
             h1(this.title),
