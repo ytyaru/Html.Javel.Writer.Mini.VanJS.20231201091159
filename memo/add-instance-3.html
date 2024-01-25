@@ -1,0 +1,383 @@
+<script src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
+<script src="../docs/lib/van-x/0.1.3/nomodule.min.js"></script>
+<script src="../docs/lib/js-yaml/4.1.0/min.js"></script>
+<script src="../docs/lib/util/type.js"></script>
+<script>
+const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
+window.addEventListener('DOMContentLoaded', async(event) => {
+//    const InstanceList = () => {
+    const InstanceList = (sname, initValues, addFn) => {
+        //const items = vanX.reactive(JSON.parse(localStorage.getItem("appState") ?? "[]"))
+        //const items = vanX.reactive([{domain:'mstdn.jp', isDel:false}])
+        //const items = vanX.reactive([{domain:'mstdn.jp', isDel:false}])
+        const items = vanX.reactive(((initValues) ? initValues.map(init=>({domain:init, isDel:false})) : [{domain:'mstdn.jp', isDel:false}]))
+        //van.derive(() => localStorage.setItem("appState", JSON.stringify(items.filter(_ => 1))))
+        const inputDom = input({type:'text',placeholder:'domain',size:12})
+        const isValid = ()=>{
+            console.log(inputDom.value, items)
+            if (!inputDom.value.trim()) { console.warn('空値です。'); return false; } // 空値
+            if (0 < items.filter(item=>item.domain===inputDom.value).length) { console.warn('既存です。'); return false; } // 既存
+            // リンク切れ確認もしたいがCORS制約により不可能…
+            return true
+        }
+        const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); addFn(inputDom.value); }}
+        //const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); WebService.addInstance(sname, domain); }}
+        return div(inputDom,
+            button({onclick:()=>addValue()}, '＋'),
+            vanX.list(div, items, ({val: v}, deleter, k) => div(
+                input({type: 'checkbox', checked: () => v.isDel, onclick: e => v.isDel = e.target.checked}),
+                () => (v.isDel ? van.tags.strike : span)(v.domain),
+                van.tags.a({href:()=>`https://${v.domain}/`,style:'text-decoration:none;'}, '🔗'),
+                //van.tags.a({onclick:()=>{deleter();WebService.ITEMS.splice(k,1);}, onkeydown:e=>{if(' '===e.key){e.preventDefault()}else if('Tab'===e.key){return}deleter();WebService.ITEMS.splice(k,1);}, tabindex:0, style:'cursor:pointer;'}, '❌'),
+                van.tags.a({onclick:()=>{deleter();WebService.deleteInstance(sname,v.domain);}, onkeydown:e=>{if(' '===e.key){e.preventDefault()}else if('Tab'===e.key){return}deleter();WebService.deleteInstance(sname,v.domain);}, tabindex:0, style:'cursor:pointer;'}, '❌'),
+
+                //van.tags.a({onclick:deleter, onkeydown:e=>{if(' '===e.key){e.preventDefault()};deleter()}, tabindex:0, style:'cursor:pointer;'}, '❌'),
+            )),
+        )
+    }
+//    van.add(document.body, InstanceList(['pawoo.net'], (domain)=>console.log(`${domain}追加`)))
+//    van.add(document.body, InstanceList(['misskey.com'], (domain)=>console.log(`${domain}追加だーよ`)))
+
+    van.add(document.body, InstanceList('Mastodon', ['pawoo.net'], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}))
+    van.add(document.body, InstanceList('Misskey', ['misskey.com'], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}))
+
+
+;
+//    van.add(document.body, InstanceList)
+
+/*
+    function makeInstanceList(initValues) {
+        //const items = vanX.reactive([{domain:'mstdn.jp', isDel:false}])
+        const items = vanX.reactive(((initValues) ? initValues.map(init=>({domain:init, isDel:false})) : [{domain:'mstdn.jp', isDel:false}]))
+        const inputDom = input({type:'text',placeholder:'domain'})
+        const isValid = ()=>{
+            console.log(inputDom.value, items)
+            if (!inputDom.value.trim()) { console.warn('空値です。'); return false; } // 空値
+            if (0 < items.filter(item=>item.domain===inputDom.value).length) { console.warn('既存です。'); return false; } // 既存
+            // リンク切れ確認もしたいがCORS制約により不可能…
+            return true
+        }
+        const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false})}}
+        const swap = (i, k)=> {
+            const tmp = items[k]
+            items[k] = items[i]
+            items[i] = tmp
+        }
+        return div(inputDom,
+            button({onclick:()=>addValue()}, '＋'),
+            vanX.list(div, items, ({val: v}, deleter) => div(
+                input({type: 'checkbox', checked: () => v.isDel, onclick: e => v.isDel = e.target.checked}),
+                () => (v.isDel ? van.tags.strike : span)(v.domain),
+                van.tags.a({href:()=>`https://${v.domain}/`,style:'text-decoration:none;'}, '🔗'),
+                van.tags.a({onclick:deleter, style:'cursor:pointer;'}, '❌'),
+            )),
+        )
+    }
+//    van.add(document.body, makeInstanceList())
+//    van.add(document.body, makeInstanceList('misskey.com'))
+//    van.add(document.body, ()=>makeInstanceList())
+//    van.add(document.body, ()=>makeInstanceList(['misskey.com']))
+    */
+
+
+
+
+
+
+
+
+
+    class AuthorState {
+        constructor() {
+            this.name = van.state('')
+            this.cryptos = CryptoAssets.reactive()
+            this.services = WebService.reactive()
+            console.log(this.cryptos)
+            console.log(this.services)
+//            this.dates = dates
+//            this.uuid = null
+        }
+        get htmls() { return [
+            p(this.name),
+            p(()=>div(this.services)),
+            p(()=>div(this.cryptos)),
+        ]}
+        get yaml() { return jsyaml.dump({'author':{name:this.name.val, ...this.#webServiceYaml, ...this.#cryptoAssetsYaml}}) }
+        get #webServiceYaml() { // 値があるキーのみ対象にしたオブジェクトに作り直す
+            const obj = {}
+            for (let key of Object.keys(this.services).sort()) {
+                if      (''===this.services[key]) { continue }
+                else if (Type.isString(this.services[key])) { obj[key] = this.services[key] }
+                else if (Type.isObject(this.services[key])) {
+                    obj[key] = {}
+                    for (let insId of Object.keys(this.services[key])) {
+                        if (this.services[key][insId]) {
+                            obj[key][insId] = this.services[key][insId]
+                        }
+                    }
+                    if (0===Object.keys(obj[key]).length) { delete obj[key] }
+                }
+            }
+            return ((0===Object.keys(obj).length) ? ({}) : ({service:obj}))
+        }
+        get #copy() {
+            const obj = {}
+            JSON.parse(JSON.stringify(this.services))
+        }
+        get #cryptoAssetsYaml() {
+            const obj = {}
+            //for (let key of Object.keys(this.services)) {
+            for (let key of Object.keys(this.cryptos).sort()) {
+                if (this.cryptos[key]) { obj[key] = this.cryptos[key] }
+            }
+            return ((0===Object.keys(obj).length) ? ({}) : ({cryptos:obj}))
+        }
+    }
+    /*
+        class Domain {
+            constructor(domain) {
+                this._domain = domain
+            }
+            get domain() { return this._domain }
+            get url() { return {
+                top: `https://${this.domain}/`,
+                userPage: `https://${this.domain}/`+'@{{account.name}}',
+            }}
+        }
+    */
+    class WebService {
+        static ITEMS = vanX.reactive([
+        //static ITEMS = [
+            {index:0, category:'hosting', name:'GitHub', url:{domain:'github.com', top:'https://github.com/', userPage:`{{account.name}}`}},
+            {index:1, category:'sns', name:'Mastodon', url:{wikipedia:'https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B9%E3%83%88%E3%83%89%E3%83%B3_(%E3%83%9F%E3%83%8B%E3%83%96%E3%83%AD%E3%82%B0)'}, instances:[
+                {index:0, domain:'mstdn.jp', top:'https://mstdn.jp/', userPage:`@{{account.name}}`},
+                {index:1, domain:'mastodon-japan.net', top:'https://mastodon-japan.net/', userPage:`@{{account.name}}`},
+            ]},
+            {index:2, category:'sns', name:'Misskey', url:{wikipedia:'https://ja.wikipedia.org/wiki/Misskey'}, instances:[
+                {index:0, domain:'nijimiss.moe', top:'https://nijimiss.moe/', userPage:`@{{account.name}}`},
+                {index:1, domain:'misskey-square.net', top:'https://misskey-square.net/', userPage:`@{{account.name}}`},
+            ]},
+        //]
+        ])
+        //static getService(name) { return WebService.ITEMS.filter(item=>item.name.toLowerCase()===name.toLowerCase()) }
+        static getService(name) { console.log(name, WebService.ITEMS[0].name);return WebService.ITEMS.filter(item=>item.name.toLowerCase()===name.toLowerCase())[0] }
+        static getInstance(name, domain) { return this.getService(name).instances.filter(ins=>ins.domain===domain) }
+        static addInstance(name, domain) { this.#addService(name); const s=this.getService(name); console.log(s, s.instances); return s.instances.push({'index':s.instances.length, 'domain':domain, 'top':`https://${domain}/`, 'userPage':`@{{account.name}}`, 'isDel':false}); }
+        static #addService(name) { return this.ITEMS.push(({'index':this.ITEMS.length, 'name':name, 'category':'sns', 'url':{'wikipedia':''}, 'instances':[]})) }
+        static deleteInstance(name, domain) {const s=this.getService(name); const i=s.instances.findIndex(ins=>ins.domain===domain); s.instances.splice(i, 1); console.log('deleteInstance', name, domain, i);}
+        //static reactive() { // vanX.reactive({Service-Instance:User, ...})
+        static reactive() { // vanX.reactive({Service:User, Service:{Instance:User,...}, ...})
+            const obj = {}
+            //const getKeys = (item)=>((item.hasOwnProperty('instances') ? item.instances.map(ins=>`${item.name}-${item.name}`) : [item.name]))
+            const getKeys = (item)=>item.name
+            const keys = this.ITEMS.map(item=>getKeys(item)).flat().map(k=>k.toLowerCase())
+            console.log(keys)
+//            for (let k of keys) { obj[k] = '' }
+            for (let k of keys) {
+                obj[k] = ''
+                const conds = this.ITEMS.filter(item=>item.hasOwnProperty('instances') && k===item.name.toLowerCase())
+                if (conds.length < 1) { continue }
+                obj[k] = {}
+                for (let ins of conds[0].instances) { Object.assign(obj[k], ({[ins.domain]: ''})) }
+            }
+            console.log(obj)
+            return vanX.reactive(obj)
+        }
+        static make(meta) { return table(this.#trs(meta)) }
+        static #trs(meta) { return WebService.ITEMS.map((item,i)=>((item.hasOwnProperty('instances')) ? this.#hasInstanceTrs(meta,item, i) : this.#tr(meta,item, i))) }
+        static #tr(meta,item, i) { return [
+            th({colspan:2},van.tags.label(van.tags.a({href:item.url.top, target:'_blank', rel:'noopener noreferrer'}, item.name))), 
+            td(van.tags.input({id:`webservice-${i}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
+                const selecteds = WebService.ITEMS.filter(item=>i===item.index)
+                console.log(selecteds)
+                if (1!==selecteds.length) { console.warn('WebServiceのキー候補が1つ以外で不正なので中断します。'); }
+//                const key = selecteds[0].name.toLowerCase()
+                const key = this.#yamlKey(selecteds[0])
+                console.log(`key: ${key}`)
+                meta.author.services[key] = e.target.value
+                console.log(`${key}: ${meta.author.services[key]}`)
+            }}))
+        ]}
+        static #hasInstanceTrs(meta,item,i) { return item.instances.map((ins,k)=>tr(this.#instanceTrContents(meta,item,i,ins,k))) }
+        static #instanceTrContents(meta, item, i, ins, k) {
+            const contens = []
+            if (0===k) { contens.push(th({rowspan:item.instances.length},van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name)))) }
+            if (ins.isDel) { return contens }
+            //contens.push(th(van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain))))
+            contens.push(th(
+                van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain)), 
+                ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>{console.log('DEL');ins.isDel=true;}}, '✖') : '')))
+            contens.push(td(van.tags.input({id:`webservice-${i}-${k}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
+                    const selected = WebService.ITEMS.filter(item=>i===item.index)[0]
+                    const serviceId = selected.name.toLowerCase()
+                    const instanceId = selected.instances[k].domain.toLowerCase()
+                    meta.author.services[`${serviceId}`][`${instanceId}`] = e.target.value;
+                    console.log(e, e.target.value, i, serviceId, instanceId, meta.author.services[`${serviceId}`][`${instanceId}`]);
+//            }}, ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>ins.isDel}, '✖') : ''))))
+            }})))
+            console.log('xxxxxxxxxxxxxxxxxxxxxx:', ins, ins.hasOwnProperty('isDel'), ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>ins.isDel}, '✖') : ''))
+            return contens
+       }
+       static #yamlKey(service, instance) { return `${service.name}${((instance) ? '-'+instance.domain.replace('.','-') : '')}`.toLowerCase() }
+    }
+    class CryptoAssets {
+        static ITEMS = [
+            {index:0, abbr:'MONA', url:'https://ja.wikipedia.org/wiki/Monacoin'},
+            {index:1, abbr:'BTC', url:'https://ja.wikipedia.org/wiki/%E3%83%93%E3%83%83%E3%83%88%E3%82%B3%E3%82%A4%E3%83%B3'},
+            {index:2, abbr:'LTC', url:'https://ja.wikipedia.org/wiki/%E3%83%A9%E3%82%A4%E3%83%88%E3%82%B3%E3%82%A4%E3%83%B3'},
+            {index:3, abbr:'ETH', url:'https://ja.wikipedia.org/wiki/%E3%82%A4%E3%83%BC%E3%82%B5%E3%83%AA%E3%82%A2%E3%83%A0'},
+            {index:4, abbr:'SOL', url:'https://en.wikipedia.org/wiki/Solana_(blockchain_platform)'},
+            {index:5, abbr:'DOGE', url:'https://ja.wikipedia.org/wiki/%E3%83%89%E3%83%BC%E3%82%B8%E3%82%B3%E3%82%A4%E3%83%B3'},
+        ]
+        constructor(type, address) {
+            this.type = type
+            this.address = address
+        }
+        static make(meta) { return table(this.#trs(meta)) }
+        static #trs(meta) { return this.ITEMS.map((item,i)=>tr(
+            th(van.tags.label(van.tags.a({href:item.url, target:'_blank', rel:'noopener noreferrer'}, item.abbr))), 
+            //td(van.tags.input({id:`crypto-assets-${i}`, placeholder:'アドレス', oninput:(e)=>meta.author.cryptoAssets[i].address.val = e.target.value}))
+            td(van.tags.input({id:`crypto-assets-${i}`, placeholder:'アドレス', oninput:(e)=>{
+                console.log(meta.author.cryptoAssets)
+                meta.author.cryptos[item.abbr.toLowerCase()] = e.target.value
+            }}))
+        ))}
+        static reactive() { // vanX.reactive({Abbr:Address, ...})
+            const obj = {}
+            for (let item of this.ITEMS) { obj[item.abbr] = '' }
+            return vanX.reactive(obj)
+        }
+    }
+    class Dates {
+        constructor(created, published, updated, expiration) {
+            this.created = ((created) ? created : new Date())
+            this.published = published
+            this.updated = updated
+            this.expiration = expiration
+        }
+        ymdhms(d,s1='-',s2=' ',s3=':') { return `${this.ymd(d, s1)}${s2}${this.hms(d, s3)}` }
+        ymd(d,s='-') { return `${d.getFullYear()}${s}${d.getMonth()+1}${s}${d.getDate()}` }
+        hms(d,s=':') { return `${d.getHours()}${s}${d.getMinutes()}${s}${d.getSeconds()}` }
+        md(d,s='-') { return `${d.getMonth()+1}${s}${d.getDate()}` }
+        hm(d,s=':') { return `${d.getHours()}${s}${d.getMinutes()}${s}${d.getSeconds()}` }
+        ms(d,s=':') { return `${d.getHours()}${s}${d.getMinutes()}${s}${d.getSeconds()}` }
+    }
+    class Revision {
+        constructor(ver, created, patch, summary) {
+            this.version = ver
+            this.created = created
+            this.patch = patch
+            this.summary = summary
+        }
+    }
+    class SelectElement {
+        constructor(label, items, setFn, selectedIndex=0) {
+            this._label = label
+            this._items = items
+            this._setFn = setFn
+            this._selected = van.state(selectedIndex)
+            this._summary = van.derive(()=>this._items[this._selected.val].summary)
+            this._comment = van.derive(()=>this._items[this._selected.val].comment)
+            this._details = van.derive(()=>this._items[this._selected.val].details)
+        }
+        get label() { return this._label }
+        make(meta) { return div(van.tags.select({title:()=>this._comment.val, onchange:(e)=>{
+            console.log(this._selected.val);
+            this._selected.val = e.target.value
+            this._setFn(meta, this.selectedItem) // meta.genre = this.selectedItem.name
+        //}}, this.#options), span(this._summary)) }
+        }}, this.#options), van.tags.details({style:'display:inline-block;'},van.tags.summary(this._summary), this._details)) }
+        get #options() { return this._items.map((item,i)=>van.tags.option({title:item.summary, value:i}, item.name)) }
+        get selectedItem() { return this._items[this._selected.val] }
+    }
+    const Category = new SelectElement('カテゴリ', [
+        {name: '文学', summary:'人間の醜さや悲劇を描いた小説。', comment:'芸術性を重視', details:'純文学。学問でない散文で、芸術性のある文章。'},
+        {name: '一般文芸', summary:'物語の面白さを追求した小説。', comment:'娯楽性を重視', details:'大衆文学。文学よりも娯楽性を重視した文章。'},
+        {name: 'ライト文芸', summary:'現実味のあるライトノベル小説。', comment:'大人用ラノベ', details:'大人用ラノベ。一般文芸＋ライトノベル。ラノベと同様にキャラクターを売りにしつつ、より現実味がある文章。'},
+        {name: 'ライトノベル', summary:'登場人物の面白さを追求した小説。', comment:'思春期向け。非現実的な設定。平易な文体。', details:'思春期向け。非現実的な設定。平易な文体。ハッピーエンド。多幸感。ストレスフリー。頭を空っぽにしてスラスラ読める。不快な展開がなく快感ばかり。'},
+        {name: '児童', summary:'12歳以下の児童向け小説。', comment:'子供用小説', details:''},
+    ], (meta,item)=>meta.category=item.name)
+    const Genre = new SelectElement('ジャンル', [
+        {name: 'ファンタジー', summary:'剣・魔法・ドラゴン等が存在する世界での冒険譚。', comment: '', details:''},
+        {name: 'SF', summary:'科学的根拠をベースにした物語。', comment: '誰が犯人か、どんな手口か、動機は何か。', details:''},
+        {name: '推理', summary:'謎解きが主題の小説。', comment: '', details:''},
+        {name: 'ホラー', summary:'恐怖が主題の小説。', comment: '怪談、幽霊、妖怪、呪い、ゾンビ、ウイルス、パニック', details:''},
+        {name: '恋愛', summary:'恋愛を主軸においた物語。', comment: '', details:''},
+        {name: '青春', summary:'学生が主人公の物語。', comment: '', details:''},
+        {name: '歴史/時代', summary:'歴史を物語にした小説。', comment: '史実→"歴史"／創作→"時代"', details:''},
+        {name: '経済', summary:'経済の仕組みや労働問題を扱う物語。', comment: '', details:''},
+        {name: '政治', summary:'政治的出来事を扱った物語。', comment: '', details:''},
+        {name: '官能', summary:'性描写が主題の小説。', comment: '', details:''},
+        {name: 'ノンフィクション', summary:'事実に基づいた物語。', comment: '', details:''},
+        {name: '随筆', summary:'見聞・思索・感想などを気ままに記した文章。', comment: 'エッセイ、日記、雑記、私小説', details:'話の筋道が整合的な体系に回収されてしまうことを何より忌避して、複数の論理や断片的な思考に積極的に身を任せ、脱線や逸脱や逡巡をいとわない。安直な全体化に執拗に抵抗する、そんな自由な思考の「試み」にこそ、エッセイというジャンルの本質がある。'},
+    ], (meta,item)=>meta.genre=item.name)
+
+    console.log(CryptoAssets.ITEMS)
+    class WorkState {
+        constructor(title, catchCopy, intro, category, genre) {
+            this.title = title
+            this.catch = catchCopy
+            this.intro = intro
+            this.category = category // 小説（文学、一般文芸、ライト文芸、ライトノベル、児童）
+            this.genre = genre // ファンタジー、SF、推理、ホラー、恋愛、青春、歴史、経済、政治、官能、随筆、ノンフィクション
+        }
+        get htmls() { return [
+            h1(this.title),
+            h2(this.catch),
+            p(this.category),
+            p(this.genre),
+        ]}
+        get yaml() { return jsyaml.dump({title:this.title, catch:this.catch, intro:this.intro, category:this.category, genre:this.genre}) }
+        //get yaml() { return jsyaml.dump({title:this.title, catch:this.catch, intro:this.intro, category:this.category, genre:this.genre, author:{'name':this.author.name }}) }
+    }
+    class Meta {
+        constructor(title, catchCopy, intro, category, genre) {
+            this.work = vanX.reactive(new WorkState(title, catchCopy, intro, category, genre))
+            this.author = new AuthorState()
+//            this.cryptos = CryptoAssets.reactive()
+//            this.services = WebService.reactive()
+        }
+        get htmls() { return [
+            h1(this.work.title),
+            h2(this.work.catch),
+            p(this.work.intro),
+            p(this.work.category),
+            p(this.work.genre),
+            p(this.author.name),
+            p(Object.entries(this.author.services).join(',')),
+            p(Object.entries(this.author.cryptos).join(',')),
+//            p(()=>div(this.author.webServices.map((item,i)=>`${WebService.ITEMS[i].name}:${item.username.val}`))),
+//            p(()=>div(this.author.cryptoAssets.map((item,i)=>`${CryptoAssets.ITEMS[i].abbr}:${item.address.val}`))),
+        ]}
+        //get yaml() { return `---\n${jsyaml.dump({title:this.title, catch:this.catch, intro:this.intro, category:this.category, genre:this.genre, author:{'name':this.author.name }})}---` }
+        get yaml() { return `---\n${this.work.yaml}${this.author.yaml}---` }
+        get #webServiceYaml() { return this.author.webServices.filter(item=>item.username.val).map(item=>{
+            console.log(item);
+            return ({'type':WebService.ITEMS[item.index].name, 'address':item.username.val});
+        }) }
+    }
+    const meta = new Meta('タイトル', 'キャッチコピー', '紹介文', Category.selectedItem.name, Genre.selectedItem.name)
+    console.log(Object.keys(meta))
+    console.log(Object.getOwnPropertyDescriptor(meta, "property"))
+    van.add(document.body, div(div(table(
+        tr(th('タイトル'), td(input({placeholder:'タイトル',value:'タイトル',oninput:(e)=>meta.work.title=e.target.value}))), 
+        tr(th('ｷｬｯﾁｺﾋﾟｰ'), td(input({placeholder:'キャッチコピー',value:'キャッチコピー',oninput:(e)=>meta.work.catch=e.target.value}))), 
+        tr(th('紹介文'), td(input({placeholder:'紹介文',value:'紹介文',oninput:(e)=>meta.work.intro=e.target.value}))), 
+        tr(th(Category.label), td(()=>Category.make(meta.work))), 
+        tr(th(Genre.label), td(()=>Genre.make(meta.work))), 
+    //)), div(()=>div(meta.htmls)), pre(()=>meta.yaml)))
+    ))))
+    van.add(document.body, div(div(table(
+        tr(th('著者名'), td(input({placeholder:'山田《やまだ》太郎《たろう》',value:'山田《やまだ》太郎《たろう》',oninput:(e)=>meta.author.name.val=e.target.value}))), 
+//        tr(th('外部'), td(WebService.make(meta.author))),
+//        tr(th('暗号通貨'), td(CryptoAssets.make(meta.author))), 
+//        tr(th('外部'), td(WebService.make(meta))),
+//        tr(th('暗号通貨'), td(CryptoAssets.make(meta))), 
+        tr(th('外部'), td(()=>WebService.make(meta))),
+        tr(th('暗号通貨'), td(()=>CryptoAssets.make(meta))), 
+    //)), div(()=>div(meta.author.htmls)), pre(()=>meta.author.yaml)))
+    ))))
+    van.add(document.body, div(()=>div(meta.htmls)), pre(()=>meta.yaml))
+})
+</script>
+
