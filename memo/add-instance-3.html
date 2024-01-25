@@ -24,6 +24,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         //const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); WebService.addInstance(sname, domain); }}
         return div(inputDom,
             button({onclick:()=>addValue()}, '＋'),
+            /*
             vanX.list(div, items, ({val: v}, deleter, k) => div(
                 input({type: 'checkbox', checked: () => v.isDel, onclick: e => v.isDel = e.target.checked}),
                 () => (v.isDel ? van.tags.strike : span)(v.domain),
@@ -33,6 +34,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
 
                 //van.tags.a({onclick:deleter, onkeydown:e=>{if(' '===e.key){e.preventDefault()};deleter()}, tabindex:0, style:'cursor:pointer;'}, '❌'),
             )),
+            */
         )
     }
 //    van.add(document.body, InstanceList(['pawoo.net'], (domain)=>console.log(`${domain}追加`)))
@@ -201,7 +203,17 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         static #hasInstanceTrs(meta,item,i) { return item.instances.map((ins,k)=>tr(this.#instanceTrContents(meta,item,i,ins,k))) }
         static #instanceTrContents(meta, item, i, ins, k) {
             const contens = []
-            if (0===k) { contens.push(th({rowspan:item.instances.length},van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name)))) }
+            //if (0===k) { contens.push(th({rowspan:item.instances.length},van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name)))) }
+            if (0===k) {
+                contens.push(th({rowspan:item.instances.length},
+                    van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name)),
+                    van.tags.br(),
+                    InstanceList(...(('Mastodon'===item.name) ? ['Mastodon', [], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}] : ['Misskey', [], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}])),
+                    //InstanceList(...(('Mastodon'===item.name) ? ['Mastodon', ['pawoo.net'], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}] : ['Misskey', ['misskey.com'], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}])),
+//                    van.tags.button({onclick:()=>addValue()}, '＋'),
+                    //van.tags.a({onclick:()=>ins.isDel=true})
+                ))
+            }
             if (ins.isDel) { return contens }
             //contens.push(th(van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain))))
             contens.push(th(
