@@ -7,15 +7,23 @@ const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pr
 window.addEventListener('DOMContentLoaded', async(event) => {
     const TodoList = () => {
         //const items = vanX.reactive(JSON.parse(localStorage.getItem("appState") ?? "[]"))
-        const items = vanX.reactive([])
-            van.derive(() => localStorage.setItem("appState", JSON.stringify(items.filter(_ => 1))))
-            const inputDom = input({type: "text"})
-            return div(
-            inputDom, button({onclick: () => items.push({text: inputDom.value, done: false})}, "Add"),
-                vanX.list(div, items, ({val: v}, deleter) => div(
-                input({type: "checkbox", checked: () => v.done, onclick: e => v.done = e.target.checked}),
-                () => (v.done ? strike : span)(v.text),
-                a({onclick: deleter}, "❌"),
+        const items = vanX.reactive([{domain:'mstdn.jp', isDel:false}])
+        //van.derive(() => localStorage.setItem("appState", JSON.stringify(items.filter(_ => 1))))
+        const inputDom = input({type:'text'})
+        const isValid = ()=>{
+            console.log(inputDom.value, items)
+            if (!inputDom.value.trim()) { console.warn('空値です。'); return false; } // 空値
+            if (0 < items.filter(item=>item.domain===inputDom.value).length) { console.warn('既存です。'); return false; } // 既存
+            return true
+        }
+        const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false})}}
+        return div(inputDom,
+            button({onclick:()=>addValue()}, '＋'),
+            vanX.list(div, items, ({val: v}, deleter) => div(
+                input({type: 'checkbox', checked: () => v.isDel, onclick: e => v.isDel = e.target.checked}),
+                () => (v.isDel ? van.tags.strike : span)(v.domain),
+                van.tags.a({href:()=>`https://${v.domain}/`,style:'text-decoration:none;'}, '🔗'),
+                van.tags.a({onclick:deleter, style:'cursor:pointer;'}, '❌'),
             )),
         )
     }
