@@ -1,6 +1,7 @@
 <script src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
 <script src="../docs/lib/van-x/0.1.3/nomodule.min.js"></script>
 <script src="../docs/lib/js-yaml/4.1.0/min.js"></script>
+<script src="../docs/lib/dexie/3.2.4/min.js"></script>
 <script src="../docs/lib/util/type.js"></script>
 <script>
 const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
@@ -12,33 +13,37 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         //const items = vanX.reactive([{domain:'mstdn.jp', isDel:false}])
         const items = vanX.reactive(((initValues) ? initValues.map(init=>({domain:init, isDel:false})) : [{domain:'mstdn.jp', isDel:false}]))
         //van.derive(() => localStorage.setItem("appState", JSON.stringify(items.filter(_ => 1))))
-        const inputDom = input({type:'text',placeholder:'domain',size:6})
+        const inputDom = input({id:`add-ins-${sname.toLowerCase()}`, type:'text',placeholder:'domain',size:6})
         const isValid = ()=>{
             console.log(inputDom.value, items)
             if (!inputDom.value.trim()) { console.warn('空値です。'); return false; } // 空値
             if (0 < WebService.ITEMS.filter(item=>item.name===sname)[0].instances.filter(ins=>ins.domain===inputDom.value).length) { console.warn('既存です。'); return false; } // 既存
             //if (0 < items.filter(item=>item.domain===inputDom.value).length) { console.warn('既存です。'); return false; } // 既存
             // リンク切れ確認もしたいがCORS制約により不可能…
+            // フォーカスセット
             return true
         }
-        const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); addFn(inputDom.value); }}
+        const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); addFn(inputDom.value); return true}}
         //const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); WebService.addInstance(sname, domain); }}
         const focus = ()=> {
             const si = WebService.ITEMS.findIndex(item=>item.name===sname)
             const s = WebService.ITEMS[si]
             if (!s.hasOwnProperty('instances')) { return }
             const ii = s.instances.findIndex(ins=>ins.domain===inputDom.value)
-            document.querySelector(`#webservice-${si}-${ii}`).focus()
+            console.log(`#webservice-${si}-${ii}`)
+            setTimeout(()=>document.querySelector(`#webservice-${si}-${ii}`).focus(), 0)
         }
         //return div(inputDom,button({onclick:()=>addValue()}, '＋'))
-        return div(inputDom,button({onclick:()=>{addValue();focus();}}, '＋'))
+        //return div(inputDom,button({onclick:()=>{addValue();focus();}}, '＋'))
+        return div(inputDom,button({onclick:()=>{if(addValue()){focus()}}}, '＋'))
     }
 //    van.add(document.body, InstanceList(['pawoo.net'], (domain)=>console.log(`${domain}追加`)))
 //    van.add(document.body, InstanceList(['misskey.com'], (domain)=>console.log(`${domain}追加だーよ`)))
 
+    /*
     van.add(document.body, InstanceList('Mastodon', ['pawoo.net'], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}))
     van.add(document.body, InstanceList('Misskey', ['misskey.com'], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}))
-
+    */
 
 ;
 //    van.add(document.body, InstanceList)
@@ -221,13 +226,16 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             //contens.push(th(van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain))))
             contens.push(th(
                 van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain)), 
-                ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>{console.log('DEL');ins.isDel=true;},onkeydown:e=>{if(' '===e.key){e.preventDefault()}ins.isDel=true;console.log('aXXXXXXXXX');},tabindex:0}, '✖') : '')))
+                ((ins.hasOwnProperty('isDel')) ? van.tags.a({
+                    onclick:()=>{console.log('DEL');ins.isDel=true;this.deleteInstance(item.name, ins.domain);setTimeout(()=>document.querySelector(`#add-ins-${item.name.toLowerCase()}`).focus(), 0);},
+                    onkeydown:e=>{if(' '===e.key){e.preventDefault()}else if('Tab'===e.key){return}ins.isDel=true;this.deleteInstance(item.name, ins.domain);console.log('aXXXXXXXXX');setTimeout(()=>document.querySelector(`#add-ins-${item.name.toLowerCase()}`).focus(), 0);},tabindex:0}, '✖') : '')))
             contens.push(td(van.tags.input({id:`webservice-${i}-${k}`, placeholder:'ユーザ名や識別子', oninput:(e)=>{
                     const selected = WebService.ITEMS.filter(item=>i===item.index)[0]
                     const serviceId = selected.name.toLowerCase()
                     const instanceId = selected.instances[k].domain.toLowerCase()
                     meta.author.services[`${serviceId}`][`${instanceId}`] = e.target.value;
-                    console.log(e, e.target.value, i, serviceId, instanceId, meta.author.services[`${serviceId}`][`${instanceId}`]);
+                    console.log(e,e.target.value,i,serviceId,instanceId,meta.author.services[`${serviceId}`][`${instanceId}`]);
+                    
 //            }}, ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>ins.isDel}, '✖') : ''))))
             }})))
 //            console.log('xxxxxxxxxxxxxxxxxxxxxx:', ins, ins.hasOwnProperty('isDel'), ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>ins.isDel}, '✖') : ''))
@@ -383,7 +391,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
     //)), div(()=>div(meta.htmls)), pre(()=>meta.yaml)))
     ))))
     van.add(document.body, div(div(table(
-        tr(th('著者名'), td(input({placeholder:'山田《やまだ》太郎《たろう》',value:'山田《やまだ》太郎《たろう》',oninput:(e)=>meta.author.name.val=e.target.value}))), 
+        tr(th('著者名'), td(input({id:`author-name`,placeholder:'山田《やまだ》太郎《たろう》',value:'山田《やまだ》太郎《たろう》',oninput:(e)=>meta.author.name.val=e.target.value}))), 
 //        tr(th('外部'), td(WebService.make(meta.author))),
 //        tr(th('暗号通貨'), td(CryptoAssets.make(meta.author))), 
 //        tr(th('外部'), td(WebService.make(meta))),
@@ -392,7 +400,56 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         tr(th('暗号通貨'), td(()=>CryptoAssets.make(meta))), 
     //)), div(()=>div(meta.author.htmls)), pre(()=>meta.author.yaml)))
     ))))
+    van.add(document.body, button({id:'save', onclick:async(e)=>{
+        const db = new Dexie('JavelDb');
+        db.version(1).stores({
+            authors: '++id,name,services,cryptos',
+            works: '++id,authorId,title,catch,intro,category,genre,body',
+        });
+        //const author = await db.authors.toArray()
+        //const authors = await db.authors.toArray()
+        //const author = authors[0]
+        //const author = (await db.authors.toArray())[0]
+        const author = await db.authors.get(0)
+        console.log(author)
+        console.log(author.name)
+        console.log(document.querySelector('#author-name').value)
+        console.log(author.name===document.querySelector('#author-name').value)
+        if (author.name===document.querySelector('#author-name').value) { console.warn('保存データと完全一致のため保存中止します。'); return; }
+        db.authors.put({
+            id:0,
+            name:document.querySelector('#author-name').value,
+        })
+        /*
+        console.log(db.authors.get())
+        console.log(db.authors.toArray())
+        console.log(db.authors.toArray()._value)
+        console.log(db.authors.toArray().then((authors)=>console.log(authors)))
+
+        console.log(db.authors.first())
+        for (let record of db.authors.toArray()) { console.log(record) }
+        let data = await db.authors.get()
+        console.log(data)
+        data = await db.authors.toArray()
+        console.log(data)
+        */
+        /*
+        db.authors.put({
+            id:0,
+            name:document.querySelector('#author-name'),
+        })
+        console.log(db.authors.toArray())
+        */
+    }}, '保存'))
     van.add(document.body, div(()=>div(meta.htmls)), pre(()=>meta.yaml))
+
+    static getDb
+    const services = WebService.ITEMS.filter(item=>item.hasOwnProperty('instances'))
+    const objs = services.map(s=>({[s.name]:s.instances.map(ins=>({domain:ins.domain, username:ins.username}))}))
+    {
+        'mastodon': [{domain:'', username:''}, 'misskey':[]]
+    }
+    document.querySelectorAll(`input[id^='webservice-']`)
 })
 </script>
 

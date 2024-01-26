@@ -23,6 +23,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         }
         const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); addFn(inputDom.value); }}
         //const addValue = ()=> {if (isValid()) {items.push({domain: inputDom.value, isDel: false}); WebService.addInstance(sname, domain); }}
+        /*
         const focus = ()=> {
             const si = WebService.ITEMS.findIndex(item=>item.name===sname)
             const s = WebService.ITEMS[si]
@@ -30,15 +31,16 @@ window.addEventListener('DOMContentLoaded', async(event) => {
             const ii = s.instances.findIndex(ins=>ins.domain===inputDom.value)
             document.querySelector(`#webservice-${si}-${ii}`).focus()
         }
-        //return div(inputDom,button({onclick:()=>addValue()}, '＋'))
         return div(inputDom,button({onclick:()=>{addValue();focus();}}, '＋'))
+        */
+        return div(inputDom,button({onclick:()=>addValue()}, '＋'))
     }
 //    van.add(document.body, InstanceList(['pawoo.net'], (domain)=>console.log(`${domain}追加`)))
 //    van.add(document.body, InstanceList(['misskey.com'], (domain)=>console.log(`${domain}追加だーよ`)))
-
+    /*
     van.add(document.body, InstanceList('Mastodon', ['pawoo.net'], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}))
     van.add(document.body, InstanceList('Misskey', ['misskey.com'], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}))
-
+    */
 
 ;
 //    van.add(document.body, InstanceList)
@@ -144,19 +146,17 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         }
     */
     class WebService {
-        static ITEMS = vanX.reactive([
-        //static ITEMS = [
+        static ITEMS = [
             {index:0, category:'hosting', name:'GitHub', url:{domain:'github.com', top:'https://github.com/', userPage:`{{account.name}}`}},
-            {index:1, category:'sns', name:'Mastodon', url:{wikipedia:'https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B9%E3%83%88%E3%83%89%E3%83%B3_(%E3%83%9F%E3%83%8B%E3%83%96%E3%83%AD%E3%82%B0)'}, instances:[
+            {index:1, category:'sns', name:'Mastodon', url:{wikipedia:'https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B9%E3%83%88%E3%83%89%E3%83%B3_(%E3%83%9F%E3%83%8B%E3%83%96%E3%83%AD%E3%82%B0)'}, instances:vanX.reactive([
                 {index:0, domain:'mstdn.jp', top:'https://mstdn.jp/', userPage:`@{{account.name}}`},
                 {index:1, domain:'mastodon-japan.net', top:'https://mastodon-japan.net/', userPage:`@{{account.name}}`},
-            ]},
-            {index:2, category:'sns', name:'Misskey', url:{wikipedia:'https://ja.wikipedia.org/wiki/Misskey'}, instances:[
+            ])},
+            {index:2, category:'sns', name:'Misskey', url:{wikipedia:'https://ja.wikipedia.org/wiki/Misskey'}, instances:vanX.reactive([
                 {index:0, domain:'nijimiss.moe', top:'https://nijimiss.moe/', userPage:`@{{account.name}}`},
                 {index:1, domain:'misskey-square.net', top:'https://misskey-square.net/', userPage:`@{{account.name}}`},
-            ]},
-        //]
-        ])
+            ])},
+        ]
         //static getService(name) { return WebService.ITEMS.filter(item=>item.name.toLowerCase()===name.toLowerCase()) }
         static getService(name) { console.log(name, WebService.ITEMS[0].name);return WebService.ITEMS.filter(item=>item.name.toLowerCase()===name.toLowerCase())[0] }
         static getInstance(name, domain) { return this.getService(name).instances.filter(ins=>ins.domain===domain) }
@@ -196,15 +196,20 @@ window.addEventListener('DOMContentLoaded', async(event) => {
                 console.log(`${key}: ${meta.author.services[key]}`)
             }}))
         ]}
-        static #hasInstanceTrs(meta,item,i) { return item.instances.map((ins,k)=>tr(this.#instanceTrContents(meta,item,i,ins,k))) }
-        /*
-        static #hasInstanceTrs(meta,item,i) { return [...item.instances.map((ins,k)=>tr(this.#instanceTrContents(meta,item,i,ins,k))),
-            tr(td(
-                InstanceList(...(('Mastodon'===item.name) ? ['Mastodon', [], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}] : ['Misskey', [], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}])),
-//                van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain)), 
-//                ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>{console.log('DEL');ins.isDel=true;}}, '✖') : '')
-            ),td())
+//        static #hasInstanceTrs(meta,item,i) { return item.instances.map((ins,k)=>tr(this.#instanceTrContents(meta,item,i,ins,k))) }
+        static #hasInstanceTrs(meta,item,i) { return [
+            tr(th({rowspan:item.instances.length},
+                    van.tags.label(van.tags.a({href:item.url.wikipedia, target:'_blank', rel:'noopener noreferrer'}, item.name)),
+                    van.tags.br(),
+                    InstanceList(...(('Mastodon'===item.name) ? ['Mastodon', [], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}] : ['Misskey', [], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}])),), td(
+                            InstanceList(...(('Mastodon'===item.name) ? ['Mastodon', [], (domain)=>{WebService.addInstance('Mastodon', domain);console.log(WebService.getService('Mastodon').instances);}] : ['Misskey', [], (domain)=>{WebService.addInstance('Misskey', domain);console.log(WebService.getService('Misskey').instances);}])),
+            //                van.tags.label(van.tags.a({href:ins.top, target:'_blank', rel:'noopener noreferrer'}, ins.domain)), 
+            //                ((ins.hasOwnProperty('isDel')) ? van.tags.a({onclick:()=>{console.log('DEL');ins.isDel=true;}}, '✖') : '')
+                        ),td())
+            ...item.instances.map((ins,k)=>tr(this.#instanceTrContents(meta,item,i,ins,k))),
+            
         ] }
+        /*
         */
         static #instanceTrContents(meta, item, i, ins, k) {
             const contens = []
