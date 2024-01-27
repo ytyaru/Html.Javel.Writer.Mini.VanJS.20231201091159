@@ -33,6 +33,7 @@ class InstanceUi {
     constructor(serviceKey) {
         this._serviceKey = serviceKey
         this._items = vanX.reactive([])
+        //this._items = vanX.reactive([{domain:'test.com',user:{id:null,name:'test-user'}}])
     }
     get items() { return this._items }
     makeDomain() { return [
@@ -68,15 +69,24 @@ class InstanceUi {
                 //((0===trs.length) ? th({rowspan:inss.size}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${v.name}`,style:`display:block;`}), v.name)) : null),
                 //((0===trs.length) ? th({rowspan:inss.size}, a(Ui.extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey)) : null),
                 //((0===trs.length) ? th({rowspan:inss.length}, a(Ui.extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey)) : null),
-                th(a(Ui.extLink({href:`https://${domain}/`,style:`display:block;`}), domain), a({onclick:e=>{this.#delDomain(domain)}, onkeydown:e=>{this.#delDomain(domain)}}, '✖')),
+                //th(a(Ui.extLink({href:`https://${domain}/`,style:`display:block;`}), domain), a({onclick:e=>{this.#delDomain(domain)}, onkeydown:e=>{this.#delDomain(domain)}}, '✖')),
+                //th(a(Ui.extLink({href:`https://${domain}/`}), domain), a({onclick:e=>{this.#delDomain(domain)}, onkeydown:e=>{this.#delDomain(domain)},style:`cursor:pointer;`,tabindex:0}, '✖')),
+                th(a(Ui.extLink({href:`https://${domain}/`}), domain), a({onclick:e=>{this.#delDomain(domain)}, onkeydown:e=>{if([' ','Enter','Del'].some(v=>v===e.key)){e.preventDefault();this.#delDomain(domain);}},style:`cursor:pointer;`,tabindex:0}, '✖')),
                 //td(Ui.user(serviceKey, domain, inss.get(domain).user.name)),
-                td(Ui.user(serviceKey, domain, inss.filter(ins=>ins.domain===domain)[0].user.name)),
+                td(Ui.user(this._serviceKey, domain, inss.filter(ins=>ins.domain===domain)[0].user.name)),
             ))
         }
+        console.log(trs)
         return trs
     }
+    /*
+    makeTr(item) { return tr(
+        th(a(Ui.extLink({href:`https://${item.domain}/`}), item.domain), a({onclick:e=>{this.#delDomain(item.domain)}, onkeydown:e=>{this.#delDomain(item.domain)},style:`cursor:pointer;`}, '✖')),
+        td(Ui.user(this._serviceKey, item.domain, item.user.name)),
+    )}
+    */
     #addDomain(domain) { if(0<this.items.filter(item=>item.domain===domain).length) { console.warn(`入力したドメイン名${domain}は既存のため追加を中断しました。`); return; } this.items.push(({domain:domain, user:{id:null,name:''}})) }
-    #delDomain(domain) { this._items.splice(this._items.findIndex(v=>v.domain===domain), 1) }
+    #delDomain(domain) { this._items.splice(this._items.findIndex(v=>v.domain===domain), 1); console.log('#delDomain():',domain,this._items); }
 }
 class WebServiceTable {
     constructor() {
@@ -91,6 +101,7 @@ return this._s.federateds.map(([k,v],i)=>tr(((0===i) ? th(a(this.#extLink({href:
     }
     */
     #makeFederateds() {
+        console.log('#makeFederateds()')
         const trs = []
         //for (let serviceKey of this.federateds.keys()) {
         for (let serviceKey of this._s.federateds().keys()) {
@@ -100,6 +111,7 @@ return this._s.federateds.map(([k,v],i)=>tr(((0===i) ? th(a(this.#extLink({href:
         return this.federateds().keys().map(k=>this.#makeFederated(serviceKey)).flat()
     }
     #makeFederated(serviceKey) {
+        console.log('#makeFederated(serviceKey)')
         const trs = []
         //console.log(this._s.federateds(serviceKey))
         //const inss = this._s.federateds(serviceKey).instances
@@ -118,7 +130,13 @@ return this._s.federateds.map(([k,v],i)=>tr(((0===i) ? th(a(this.#extLink({href:
                 td(this.#user(serviceKey, domain, inss.get(domain).user.name)),
             ))
         }
-        trs.concat(ui.makeTrs())
+//        console.log(ui.makeTrs())
+        console.log(serviceKey, trs)
+        //vanX.list(table, this.items, item=>ui.makeTr(item))
+        ui.makeTrs().forEach(tr=>trs.push(tr))
+        //trs.concat(ui.makeTrs())
+        //trs = trs.concat(ui.makeTrs())
+        console.log(serviceKey, trs)
         return trs
     }
     /*

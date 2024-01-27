@@ -7,10 +7,15 @@
 <script>
 const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
 window.addEventListener('DOMContentLoaded', async(event) => {
-    van.add(document.body, webServiceTable.make())
     //van.add(document.body, new WebServiceTable().make())
+    //van.add(document.body, webServiceTable.make())
+    van.add(document.body, ()=>webServiceTable.make())
 
-
+    
+    //vanX.list(table, this.items, item=>ui.makeTr(item))
+//    van.add(document.body, ()=>p(WebService.items.get('mastodon').ui.items.map(item=>item.domain)))
+//    vanX.list(document.querySelector('table'), WebService.items.get('mastodon').ui.items, item=>ui.makeTr(item))
+    //vanX.list(document.querySelector('table'), this.items, item=>ui.makeTr(item))
 
 //    const InstanceList = () => {
     const InstanceList = (sname, initValues, addFn) => {
