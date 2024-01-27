@@ -3,9 +3,15 @@
 <script src="../docs/lib/js-yaml/4.1.0/min.js"></script>
 <script src="../docs/lib/dexie/3.2.4/min.js"></script>
 <script src="../docs/lib/util/type.js"></script>
+<script src="webservices.js"></script>
 <script>
 const {div,span,h1,h2,p,br,em,ruby,rt,rp,textarea,button,input,table,tr,th,td,pre} = van.tags
 window.addEventListener('DOMContentLoaded', async(event) => {
+    van.add(document.body, webServiceTable.make())
+    //van.add(document.body, new WebServiceTable().make())
+
+
+
 //    const InstanceList = () => {
     const InstanceList = (sname, initValues, addFn) => {
         //const items = vanX.reactive(JSON.parse(localStorage.getItem("appState") ?? "[]"))
