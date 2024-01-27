@@ -1,13 +1,11 @@
 (function(){
-const {table,tr,th,td,a,input,button,br} = van.tags
+const {table,tr,th,td,a} = van.tags
 class WebService {
     constructor() {
         this._items = new Map()
         this._items.set('github', {category:'hosting', name:'GitHub', domain:'github.com', user:{id:null, name:''}})
-        this._items.set('mastodon', {category:'sns', name:'Mastodon', instances:new Map([['mstdn.jp', ({user:{id:null, name:''}})],['mastodon-japan.net', ({user:{id:null, name:''}})]]), ui:new InstanceUi('mastodon')})
-        this._items.set('misskey', {category:'sns', name:'Misskey', instances:new Map([['nijimiss.moe', ({user:{id:null, name:''}})], ['misskey-square.net', ({user:{id:null, name:''}})]]), ui:new InstanceUi('misskey')})
-//        this._items.set('mastodon', {category:'sns', name:'Mastodon', instances:new Map([['mstdn.jp', ({user:{id:null, name:''}})],['mastodon-japan.net', ({user:{id:null, name:''}})]])})
-//        this._items.set('misskey', {category:'sns', name:'Misskey', instances:new Map([['nijimiss.moe', ({user:{id:null, name:''}})], ['misskey-square.net', ({user:{id:null, name:''}})]])})
+        this._items.set('mastodon', {category:'sns', name:'Mastodon', instances:new Map([['mstdn.jp', ({user:{id:null, name:''}})],['mastodon-japan.net', ({user:{id:null, name:''}})]])})
+        this._items.set('misskey', {category:'sns', name:'Misskey', instances:new Map([['nijimiss.moe', ({user:{id:null, name:''}})], ['misskey-square.net', ({user:{id:null, name:''}})]])})
         console.log(this._items.entries())
 //        console.log(Array.from(this._items.entries()).map(([k,v])=>console.log(k, v)))
 //        console.log(Array.from(this._items.entries()).filter(([k,v])=>k).map(([k,v])=>console.log(k, v)))
@@ -29,55 +27,15 @@ class WebService {
     addInstance(s, domain, username) { this._items.get(s).instances.set(domain, {user:{id:null, name:username}}) }
     removeInstance(s, domain) { this._items.get(s).instances.delete(domain) }
 }
-class InstanceUi {
+/*
+class Instance {
     constructor(serviceKey) {
         this._serviceKey = serviceKey
         this._items = vanX.reactive([])
     }
-    get items() { return this._items }
-    makeDomain() { return [
-        input({id:`new-instance-${this._serviceKey}`,placeholder:`domain.com`,size:8}), 
-        this.#makeAddButton(),
-    ] }
-    #makeAddButton() { return button({
-        onclick:e=>{
-            console.log('button clicked!!', document.querySelector(`#new-instance-${this._serviceKey}`).value)
-            this.#addDomain(document.querySelector(`#new-instance-${this._serviceKey}`).value)
-            console.log(this.items)
-        }, 
-        onkeydown:e=>{
-            if (' '===e.key) { e.preventDefault() }
-            if ([' ','Enter','Ins'].some(v=>v===e.key)) {
-                this.#addDomain(document.querySelector(`#new-instance-${this._serviceKey}`).value)
-            }
-        },
-    }, '＋') }
-    makeTrs() {
-        console.log('makeTrs()..........', this._serviceKey)
-        const trs = []
-        //console.log(this._s.federateds(serviceKey))
-        //const inss = this._s.federateds(serviceKey).instances
-        //const inss = this._s.items.get(serviceKey).instances
-        const inss = this.items
-        console.log(inss)
-        //for (let domain of this.federateds.get(serviceKey).instances.keys()) {
-        //for (let domain of inss.keys()) {
-        for (let domain of inss.map(ins=>ins.domain)) {
-            trs.push(tr(
-                //((0===trs.length) ? th({rowspan:this.federateds.get(serviceKey).instances.size()}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${v.name}`,style:`display:block;`}), v.name)) : null),
-                //((0===trs.length) ? th({rowspan:inss.size}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${v.name}`,style:`display:block;`}), v.name)) : null),
-                //((0===trs.length) ? th({rowspan:inss.size}, a(Ui.extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey)) : null),
-                //((0===trs.length) ? th({rowspan:inss.length}, a(Ui.extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey)) : null),
-                th(a(Ui.extLink({href:`https://${domain}/`,style:`display:block;`}), domain), a({onclick:e=>{this.#delDomain(domain)}, onkeydown:e=>{this.#delDomain(domain)}}, '✖')),
-                //td(Ui.user(serviceKey, domain, inss.get(domain).user.name)),
-                td(Ui.user(serviceKey, domain, inss.filter(ins=>ins.domain===domain)[0].user.name)),
-            ))
-        }
-        return trs
-    }
-    #addDomain(domain) { if(0<this.items.filter(item=>item.domain===domain).length) { console.warn(`入力したドメイン名${domain}は既存のため追加を中断しました。`); return; } this.items.push(({domain:domain, user:{id:null,name:''}})) }
-    #delDomain(domain) { this._items.splice(this._items.findIndex(v=>v.domain===domain), 1) }
+    makeDomain()
 }
+*/
 class WebServiceTable {
     constructor() {
         this._s = new WebService()
@@ -104,21 +62,17 @@ return this._s.federateds.map(([k,v],i)=>tr(((0===i) ? th(a(this.#extLink({href:
         //console.log(this._s.federateds(serviceKey))
         //const inss = this._s.federateds(serviceKey).instances
         const inss = this._s.items.get(serviceKey).instances
-        const ui = this._s.items.get(serviceKey).ui
-        console.log(inss, ui.items)
-//        const insUi = new InstanceUi(serviceKey)
+        console.log(inss)
         //for (let domain of this.federateds.get(serviceKey).instances.keys()) {
         for (let domain of inss.keys()) {
             trs.push(tr(
                 //((0===trs.length) ? th({rowspan:this.federateds.get(serviceKey).instances.size()}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${v.name}`,style:`display:block;`}), v.name)) : null),
                 //((0===trs.length) ? th({rowspan:inss.size}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${v.name}`,style:`display:block;`}), v.name)) : null),
-                //((0===trs.length) ? th({rowspan:inss.size}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey), insUi.makeDomain()) : null),
-                ((0===trs.length) ? th({rowspan:inss.size+ui.items.length}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey), ui.makeDomain()) : null),
+                ((0===trs.length) ? th({rowspan:inss.size}, a(this.#extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey)) : null),
                 th(a(this.#extLink({href:`https://${domain}/`,style:`display:block;`}), domain)),
-                td(this.#user(serviceKey, domain, inss.get(domain).user.name)),
+                this.#user(serviceKey, domain, inss.get(domain).user.name),
             ))
         }
-        trs.concat(ui.makeTrs())
         return trs
     }
     /*
@@ -138,12 +92,6 @@ return this._s.federateds.map(([k,v],i)=>tr(((0===i) ? th(a(this.#extLink({href:
     //#externLinkAttr() { return {target:'_blank', rel:'noopener noreferrer'} }
     #extLink(obj) { return {...obj, target:'_blank', rel:'noopener noreferrer'} }
     #user(s, d, v) { return input({id:`webservice-${s}((d) ? '-'+d: '')`, placeholder:'ユーザ名', value:((v) ? v : '')}) }
-}
-
-class Ui {
-    static extLink(obj) { return {...obj, target:'_blank', rel:'noopener noreferrer'} }
-//    dispBlock(obj) { return {...obj, style:`${((obj.hasOwnProperty('style')) ? obj.style : '')}display:block;`} }
-    static user(s, d, v) { return input({id:`webservice-${s}((d) ? '-'+d: '')`, placeholder:'ユーザ名', value:((v) ? v : '')}) }
 }
 window.webServiceTable = new WebServiceTable()
 })()
