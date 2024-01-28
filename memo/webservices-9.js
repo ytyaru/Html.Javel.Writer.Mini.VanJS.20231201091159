@@ -1,0 +1,107 @@
+(function(){
+const {table,tr,th,td,a,input,button,br} = van.tags
+class WebService {
+    constructor() {
+        this._items = new Map()
+        this._items.set('github', {category:'hosting', name:'GitHub', domain:'github.com', user:{id:null, name:''}})
+        this._items.set('mastodon', {category:'sns', name:'Mastodon', instances:new Map([['mstdn.jp', ({user:{id:null, name:''}})],['mastodon-japan.net', ({user:{id:null, name:''}})]]), ui:new InstanceUi('mastodon')})
+        this._items.set('misskey', {category:'sns', name:'Misskey', instances:new Map([['nijimiss.moe', ({user:{id:null, name:''}})], ['misskey-square.net', ({user:{id:null, name:''}})]]), ui:new InstanceUi('misskey')})
+        console.debug(this._items.entries())
+        console.debug(Array.from(this._items.entries()).filter(([k,v])=>{console.debug('filter:',k,v);return k;}).map(([k,v])=>console.debug(k, v)))
+        console.debug(this.array.map(([k,v])=>console.debug(k, v)))
+        console.debug(this.array.length)
+    }
+    get items() { return this._items }
+    get array() { return Array.from(this._items.entries()).filter(([k,v])=>k) }
+    get siloArray() { return Array.from(this._items.entries()).filter(([k,v])=>!v.hasOwnProperty('instances')) }
+    get federatedArray() { return Array.from(this._items.entries()).filter(([k,v])=>v.hasOwnProperty('instances')) }
+    get silos() { return new Map(this.siloArray) } // 営利系サービス
+    federateds(s) { return new Map(this.federatedArray.map(([k,v])=>((!s || (s && s===k)) ? [k, v] : null)).filter(v=>v)) } // 連合系サービス
+    addInstance(s, domain, username) { this._items.get(s).instances.set(domain, {user:{id:null, name:username}}) }
+    removeInstance(s, domain) { this._items.get(s).instances.delete(domain) }
+}
+class InstanceUi {
+    constructor(serviceKey) {
+        this._serviceKey = serviceKey
+        this._items = vanX.reactive([])
+    }
+    get items() { return this._items }
+    makeDomain() { return [
+        input({id:`new-instance-${this._serviceKey}`,placeholder:`domain.com`,size:8}), 
+        this.#makeAddButton(),
+    ] }
+    #makeAddButton() { return button({
+        onclick:e=>{
+            console.debug('button clicked!!', document.querySelector(`#new-instance-${this._serviceKey}`).value)
+            this.#addDomain(document.querySelector(`#new-instance-${this._serviceKey}`).value)
+            console.debug(this.items)
+        }, 
+        onkeydown:e=>{
+            if (' '===e.key) { e.preventDefault() }
+            if ([' ','Enter','Ins'].some(v=>v===e.key)) {
+                this.#addDomain(document.querySelector(`#new-instance-${this._serviceKey}`).value)
+            }
+        },
+    }, '＋') }
+    makeTrs() {
+        console.debug('makeTrs()..........', this._serviceKey)
+        const trs = []
+        const inss = this.items
+        console.debug(inss)
+        for (let domain of inss.map(ins=>ins.domain)) {
+            trs.push(tr(
+                th(a(Ui.extLink({href:`https://${domain}/`}), domain), a({onclick:e=>{this.#delDomain(domain)}, onkeydown:e=>{if([' ','Enter','Del'].some(v=>v===e.key)){e.preventDefault();this.#delDomain(domain);}},style:`cursor:pointer;`,tabindex:0}, '✖')),
+                td(Ui.user(this._serviceKey, domain, inss.filter(ins=>ins.domain===domain)[0].user.name)),
+            ))
+        }
+        console.debug(trs)
+        return trs
+    }
+    #addDomain(domain) { if(0<this.items.filter(item=>item.domain===domain).length) { console.warn(`入力したドメイン名${domain}は既存のため追加を中断しました。`); return; } this.items.push(({domain:domain, user:{id:null,name:''}})); this.#focusUser(domain); }
+    #delDomain(domain) { this._items.splice(this._items.findIndex(v=>v.domain===domain), 1); this.#focusDomain(); console.debug('#delDomain():',domain,this._items); }
+    #focusUser(domain) { setTimeout(()=>document.querySelector(`#webservice-${this._serviceKey}-${domain}`).focus(), 0); }
+    #focusDomain() { setTimeout(()=>document.querySelector(`#new-instance-${this._serviceKey}`).focus(), 0); }
+}
+class WebServiceTable {
+    constructor() {
+        this._s = new WebService()
+    }
+    make() { return table(...this.#makeSilos(), ...this.#makeFederateds()) }
+    #makeSilos() { return this._s.siloArray.map(([k,v])=>tr(th({colspan:2},a(Ui.extLink({href:`https://${v.domain}/`,style:`display:block;`}), v.name)), Ui.user(k))) }
+    #makeFederateds() {
+        console.debug('#makeFederateds()')
+        const trs = []
+        for (let serviceKey of this._s.federateds().keys()) {
+            trs.push(...this.#makeFederated(serviceKey))
+        }
+        return trs
+        return this.federateds().keys().map(k=>this.#makeFederated(serviceKey)).flat()
+    }
+    #makeFederated(serviceKey) {
+        console.debug('#makeFederated(serviceKey)')
+        const trs = []
+        //const inss = this._s.federateds(serviceKey).instances
+        const inss = this._s.items.get(serviceKey).instances
+        const ui = this._s.items.get(serviceKey).ui
+        console.debug(inss, ui.items)
+        for (let domain of inss.keys()) {
+            trs.push(tr(
+                ((0===trs.length) ? th({rowspan:inss.size+ui.items.length}, a(Ui.extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey), ui.makeDomain()) : null),
+                th(a(Ui.extLink({href:`https://${domain}/`,style:`display:block;`}), domain)),
+                td(Ui.user(serviceKey, domain, inss.get(domain).user.name)),
+            ))
+        }
+        console.debug(serviceKey, trs)
+        ui.makeTrs().forEach(tr=>trs.push(tr))
+        console.debug(serviceKey, trs)
+        return trs
+    }
+}
+
+class Ui {
+    static extLink(obj) { return {...obj, target:'_blank', rel:'noopener noreferrer'} }
+//    dispBlock(obj) { return {...obj, style:`${((obj.hasOwnProperty('style')) ? obj.style : '')}display:block;`} }
+    static user(s, d, v) { return input({id:`webservice-${s}${((d) ? '-'+d: '')}`, placeholder:'ユーザ名', value:((v) ? v : '')}) }
+}
+window.webServiceTable = new WebServiceTable()
+})()
