@@ -17,13 +17,15 @@ class WebService {
     get federatedArray() { return Array.from(this._items.entries()).filter(([k,v])=>v.hasOwnProperty('instances')) }
     get silos() { return new Map(this.siloArray) } // 営利系サービス
     federateds(s) { return new Map(this.federatedArray.map(([k,v])=>((!s || (s && s===k)) ? [k, v] : null)).filter(v=>v)) } // 連合系サービス
+    federated(s) { return this.federatedArray.map(([k,v])=>(((s===k)) ? v : null)).filter(v=>v)[0] } // 連合系サービス
     addInstance(s, domain, username) { this._items.get(s).instances.set(domain, {user:{id:null, name:username}}) }
     removeInstance(s, domain) { this._items.get(s).instances.delete(domain) }
 }
 class InstanceUi {
     constructor(serviceKey) {
         this._serviceKey = serviceKey
-        this._items = vanX.reactive([])
+        //this._items = vanX.reactive([])
+        this._items = []
     }
     get items() { return this._items }
     makeDomain() { return [
@@ -43,6 +45,61 @@ class InstanceUi {
             }
         },
     }, '＋') }
+    #addDomainUserUi(domain) {
+        const table = document.querySelector(`#webservices`)
+        const tr = document.querySelector(`#tr-webservices-${this._serviceKey}`)
+        const th = tr.querySelector(`th`)
+        const lastTr = this.#getLastTr()
+        console.log(table, tr, th, lastTr)
+        //if (null===lastTr) { console.warn('ドメイン追加できませんでした。挿入位置を取得できなかったため。'); return; }
+        th.setAttribute('rowspan', `${parseInt(th.getAttribute('rowspan'))+1}`)
+        table.insertBefore(this.#makeTr(domain), lastTr)
+        //if (null===lastTr) { table.appendChild(); }
+        //else { table.insertBefore(this.#makeTr(domain), lastTr) }
+    }
+    #getLastTr() {
+        const tr = document.querySelector(`#tr-webservices-${this._serviceKey}`)
+        //const th = document.querySelector(`#th-webservices-${this._serviceKey}`)
+        let lastTr = null
+//        for (let i=0; i<this.items.length-1; i++) { lastTr = tr.nextSibling; console.log(lastTr); }
+        //for (let i=0; i<WebService.federateds(this._serviceKey).instances.size-1; i++) { lastTr = tr.nextSibling; console.log(lastTr); }
+        console.log(webServiceTable._s.federated(this._serviceKey).instances.size)
+        //for (let i=0; i<webServiceTable._s.federated(this._serviceKey).instances.size; i++) { lastTr = tr.nextSibling; console.log(lastTr); }
+        for (let i=0; i<webServiceTable._s.federated(this._serviceKey).instances.size-1; i++) {
+            lastTr = ((lastTr) ? lastTr : tr).nextSibling; console.log(lastTr);
+            //console.log(lastTr.querySelector(`a`).innerText)
+        }
+        return lastTr
+    }
+    #makeTr(domain, username) { return tr(
+        th(
+            a(Ui.extLink({href:`https://${domain}/`}), domain),
+            a({
+                onclick:e=>{this.#delDomain(domain);}, 
+                onkeydown:e=>{if([' ','Enter','Del'].some(v=>v===e.key)){e.preventDefault();this.#delDomain(domain);}},
+                style:`cursor:pointer;`,tabindex:0}, '✖')),
+        td(Ui.user(this._serviceKey, domain, ((username) ? username : ''))),
+        //td(Ui.user(this._serviceKey, domain, inss.filter(ins=>ins.domain===domain)[0].user.name)),
+    ) }
+    #removeDomainUserUi(domain) {
+        this.#getTr(domain).remove()
+        const th = document.querySelector(`#tr-webservices-${this._serviceKey}`).querySelector(`th`)
+        th.setAttribute('rowspan', `${parseInt(th.getAttribute('rowspan'))-1}`)
+    }
+    #getTr(domain) {
+        let tr = document.querySelector(`#tr-webservices-${this._serviceKey}`)
+        let th = null
+//        for (let i=0; i<this.items.length-1; i++) {
+        console.log(webServiceTable._s.federated(this._serviceKey).instances.size)
+        for (let i=0; i<webServiceTable._s.federated(this._serviceKey).instances.size; i++) {
+            th = ((0===i) ? tr.querySelector(`th`).nextSibling : tr.querySelector(`th`))
+            const d = th.querySelector(`a`).innerText
+            console.log(d)
+            if (domain===d) { return tr }
+            tr = tr.nextSibling
+        }
+        throw new Error(`対象ドメインのtr要素を発見できませんでした。:${this._serviceKey}, ${domain}`)
+    }
     makeTrs() {
         console.debug('makeTrs()..........', this._serviceKey)
         const trs = []
@@ -57,8 +114,27 @@ class InstanceUi {
         console.debug(trs)
         return trs
     }
-    #addDomain(domain) { if(0<this.items.filter(item=>item.domain===domain).length) { console.warn(`入力したドメイン名${domain}は既存のため追加を中断しました。`); return; } this.items.push(({domain:domain, user:{id:null,name:''}})); this.#focusUser(domain); }
-    #delDomain(domain) { this._items.splice(this._items.findIndex(v=>v.domain===domain), 1); this.#focusDomain(); console.debug('#delDomain():',domain,this._items); }
+//    #addDomain(domain) { if(0<this.items.filter(item=>item.domain===domain).length) { console.warn(`入力したドメイン名${domain}は既存のため追加を中断しました。`); return; } this.items.push(({domain:domain, user:{id:null,name:''}})); this.#focusUser(domain); }
+//    #delDomain(domain) { this._items.splice(this._items.findIndex(v=>v.domain===domain), 1); this.#focusDomain(); console.debug('#delDomain():',domain,this._items); }
+//    #addDomain(domain) { if(0<this.items.filter(item=>item.domain===domain).length) { console.warn(`入力したドメイン名${domain}は既存のため追加を中断しました。`); return; } this.items.push(({domain:domain, user:{id:null,name:''}})); this.#addDomainUserUi(domain); this.#focusUser(domain); }
+//    #delDomain(domain) { this._items.splice(this._items.findIndex(v=>v.domain===domain), 1); this.#focusDomain(); console.debug('#delDomain():',domain,this._items); }
+
+
+    #addDomain(domain) { console.log(webServiceTable._s.federated(this._serviceKey)); if(webServiceTable._s.federated(this._serviceKey).instances.has(domain)) { console.warn(`入力したドメイン名${domain}は既存のため追加を中断しました。`); return; } webServiceTable._s.federated(this._serviceKey).instances.set(domain, ({user:{id:null, name:''}})); this.#addDomainUserUi(domain); this.#focusUser(domain); }
+    #delDomain(domain) {
+        console.debug('#delDomain():',domain, webServiceTable._s.federated(this._serviceKey).instances)
+        const username = document.querySelector(`#webservice-${this._serviceKey}-${domain}`).value
+        if (username) {
+            if (confirm(`${webServiceTable._s.federated(this._serviceKey).name} のドメイン ${domain} とそのユーザ ${username} を削除します。\n削除しますよ？\n削除してよろしいですね？`)) {
+                this.#removeDomainUserUi(domain)
+                webServiceTable._s.federated(this._serviceKey).instances.delete(domain)
+                this.#focusDomain()
+                console.log('del :',domain, webServiceTable._s.federated(this._serviceKey).instances)
+            }
+//            if (confirm(`${webServiceTable._s.federated(this._serviceKey).name} のドメイン ${domain} とそのユーザ ${username} を削除しようとしていますが、操作ミスですよね？\n削除なんて、しませんよね？`)) { return }
+        }
+    }
+    //#delDomain(domain) { webServiceTable._s.federated(this._serviceKey).instances.delete(domain); this.#focusDomain(); console.debug('#delDomain():',domain, webServiceTable._s.federated(this._serviceKey).instances); }
     #focusUser(domain) { setTimeout(()=>document.querySelector(`#webservice-${this._serviceKey}-${domain}`).focus(), 0); }
     #focusDomain() { setTimeout(()=>document.querySelector(`#new-instance-${this._serviceKey}`).focus(), 0); }
 }
@@ -66,7 +142,7 @@ class WebServiceTable {
     constructor() {
         this._s = new WebService()
     }
-    make() { return table(...this.#makeSilos(), ...this.#makeFederateds()) }
+    make() { return table({id:'webservices'},...this.#makeSilos(), ...this.#makeFederateds()) }
     #makeSilos() { return this._s.siloArray.map(([k,v])=>tr(th({colspan:2},a(Ui.extLink({href:`https://${v.domain}/`,style:`display:block;`}), v.name)), Ui.user(k))) }
     #makeFederateds() {
         console.debug('#makeFederateds()')
@@ -85,11 +161,20 @@ class WebServiceTable {
         const ui = this._s.items.get(serviceKey).ui
         console.debug(inss, ui.items)
         for (let domain of inss.keys()) {
+            const tr = van.tags.tr(
+                ((0===trs.length) ? th({rowspan:inss.size+ui.items.length}, a(Ui.extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey), ui.makeDomain()) : null),
+                th(a(Ui.extLink({href:`https://${domain}/`,style:`display:block;`}), domain)),
+                td(Ui.user(serviceKey, domain, inss.get(domain).user.name)),
+            )
+            if (0===trs.length) { tr.setAttribute('id', `tr-webservices-${serviceKey}`) }
+            trs.push(tr)
+            /*
             trs.push(tr(
                 ((0===trs.length) ? th({rowspan:inss.size+ui.items.length}, a(Ui.extLink({href:`https://ja.wikipedia.org/wiki/${serviceKey}`,style:`display:block;`}), serviceKey), ui.makeDomain()) : null),
                 th(a(Ui.extLink({href:`https://${domain}/`,style:`display:block;`}), domain)),
                 td(Ui.user(serviceKey, domain, inss.get(domain).user.name)),
             ))
+            */
         }
         console.debug(serviceKey, trs)
         ui.makeTrs().forEach(tr=>trs.push(tr))
@@ -97,7 +182,6 @@ class WebServiceTable {
         return trs
     }
 }
-
 class Ui {
     static extLink(obj) { return {...obj, target:'_blank', rel:'noopener noreferrer'} }
 //    dispBlock(obj) { return {...obj, style:`${((obj.hasOwnProperty('style')) ? obj.style : '')}display:block;`} }
