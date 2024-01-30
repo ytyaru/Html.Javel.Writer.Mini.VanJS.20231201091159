@@ -63,13 +63,13 @@ class InstanceUi {
         return lastTr
     }
     #makeTr(domain, username) { return tr(
-        th(
-            a(Ui.extLink({href:`https://${domain}/`}), domain),
+        th(a(Ui.extLink({href:`https://${domain}/`}), domain)),
+        td(
+            Ui.user(this._serviceKey, domain, ((username) ? username : '')),
             a({
                 onclick:e=>{this.#delDomain(domain);}, 
                 onkeydown:e=>{if([' ','Enter','Del'].some(v=>v===e.key)){e.preventDefault();this.#delDomain(domain);}},
                 style:`cursor:pointer;`,tabindex:0}, '✖')),
-        td(Ui.user(this._serviceKey, domain, ((username) ? username : ''))),
     ) }
     #removeDomainUserUi(domain) {
         this.#getTr(domain).remove()
