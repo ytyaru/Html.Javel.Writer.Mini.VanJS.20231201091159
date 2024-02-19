@@ -118,7 +118,8 @@ class Tag { // {el:, dl:, lb: }
         else if (['number','range'].some(v=>v===col.type)) { return this.#makeNumberOrRange(col.value, obj.attrs) }
         console.log(obj, obj.attrs, obj.attrs.value)
         return van.tags[obj.tagName](obj.attrs, 
-            ((Type.isStr(obj.attrs.value)) ? obj.attrs.value.replace('\\n', '\n') : null), 
+            //((Type.isStr(obj.attrs.value)) ? obj.attrs.value.replace('\\n', '\n') : null), 
+            ((Type.isStr(obj.attrs.value)) ? obj.attrs.value.replace(/\\n/g, '\n') : null), 
             this.#makeSelectOptions(obj.tagName, col.value, obj.datalist),
             ((obj.children) ? obj.children : null))
     }
@@ -221,8 +222,10 @@ class SceneTransitioner {
         this._now = null
         this._mode = {dir:0, loopMethod:0}
         this._seq = new MapSequence(this._map.get(), 0)
+        this._fn = null
         console.log(this._map)
     }
+    set onSelected(v) { console.log('***************************************************onSelected:', v, Type.isFunction(v));if (Type.isFunction(v)) { this._fn = v } }
     init(sid) { this.#addAll(sid) }
     #addAll(sid) {
         van.add(document.body, this._map.makeAll())
@@ -231,11 +234,12 @@ class SceneTransitioner {
     }
     select(sid) {
         if (!this._map.get().has(sid)) { sid = this._map.get().entries().next().value[0] } // sidが未指定なら最初の画面を選択する
-        console.log(`select(): sid=${sid}`)
+        console.log(`select(): sid=${sid}`, this._fn, Type.isFunction(this._fn))
         this._now = sid
         this._seq.key = sid
         this.#hideAll()
         this.#show(sid)
+        if (Type.isFunction(this._fn)) { this._fn(sid) }
     }
     move() {
         const [i, k, v] = this._seq.next()

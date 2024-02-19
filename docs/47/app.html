@@ -92,16 +92,17 @@ a:active { color: #ff8000; }
 <script type="text/javascript" src="html-word-counter.js"></script>
 -->
 <script type="text/javascript" src="parser/javel-parser.js"></script>
+<script type="text/javascript" src="layout/layout.js"></script>
 <script>
 window.addEventListener('DOMContentLoaded', async(event) => {
     const scene = new Scene()
     const tsv = scene.Tsv.header.get() + `
-body	manuscript	textarea	原稿	# 原稿《げんこう》\\n\\n　本文。			
-body	viewer	div	ビューア				{"tabindex":0, "contenteditable":true}
+body	manuscript	textarea	原稿	# 原稿《げんこう》\\n\\n　本文。			{"width":"100%","height":"100%"}
+body	viewer	div	ビューア				{"tabindex":0, "contenteditable":true,"width":"100%","height":"100%"}
 body	title	button	題		§		
 body	counter	button	字		0字		
 body	writing-mode	button	横		横		
-body	color-shceme	button	白		白		
+body	color-scheme	button	白		白		
 body	download	button	出		出		
 head	title	text	タイトル	指輪物語《ロード・オブ・ザ・リング》			
 head	catch	text	ｷｬｯﾁｺﾋﾟｰ	世界最高のファンタジー			
@@ -125,11 +126,53 @@ auth	back	button			戻る
     console.log('parser.manuscript:', parser.manuscript)
     scene.Map.setAttr('body', 'manuscript', 'oninput', (e)=>parser.manuscript=e.target.value)
     //scene.Map.setAttr('body', 'manuscript', 'oninput', (e)=>{console.log('oninput!!!!!!!:',e.target.value);parser.manuscript=e.target.value})
-    scene.Map.setChildren('body', 'viewer', ()=>van.tags.div(parser.htmls))
+//    scene.Map.setChildren('body', 'viewer', ()=>van.tags.div(parser.htmls))
+
+    const body = new layout.Triple()
+    scene.Map.setMake('body', (uiMap, sid)=>{
+        body.el.id = sid
+        /*
+        //const doms = Array.from(uiMap).map(([k,v])=>scene.Tag.dom(v.col, v.obj))
+        //body.left.children = uiMap.get('manuscript')
+        body.right.children = uiMap.get('viewer')
+        body.center.children = [
+            uiMap.get('title'),
+            uiMap.get('counter'),
+            uiMap.get('writing-mode'),
+            uiMap.get('color-scheme'),
+            uiMap.get('download'),
+        ]
+        */
+        let d = uiMap.get('manuscript'); let dom = scene.MakeHelper.tag(d.col, d.obj);
+        body.left.children = [dom.el, dom.dl]
+        //body.left.children = dom.el
+        //body.left = dom.el
+        d = uiMap.get('viewer'); dom = scene.MakeHelper.tag(d.col, d.obj);
+        body.right.children = [dom.el, dom.dl]
+        //body.right.children = dom.el
+        //body.right = dom.el
+        const buttons = []
+        d = uiMap.get('title'); dom = scene.MakeHelper.tag(d.col, d.obj); buttons.push(dom.el);
+        d = uiMap.get('counter'); dom = scene.MakeHelper.tag(d.col, d.obj); buttons.push(dom.el);
+        d = uiMap.get('writing-mode'); dom = scene.MakeHelper.tag(d.col, d.obj); buttons.push(dom.el);
+        d = uiMap.get('color-scheme'); dom = scene.MakeHelper.tag(d.col, d.obj); buttons.push(dom.el);
+        d = uiMap.get('download'); dom = scene.MakeHelper.tag(d.col, d.obj); buttons.push(dom.el);
+        body.center.children = buttons
+        //body.center.children = van.tags.div(buttons)
+        return body.el
+    })
+    //scene.Transitioner.onSelected = (sid)=>body.resize()
+    //scene.Transitioner.onSelected = (sid)=>{console.log(body);body.resize()}
+    scene.Transitioner.onSelected = (sid)=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'))}
     van.add(document.body, 
         van.tags.button({onclick:()=>scene.Transitioner.move()},'画面遷移')
     )
     scene.addBody()
+    window.addEventListener('resize', async(event) => {
+        console.log('RESIZEEEEEEEEEEEEEEe')
+        body.resize()
+    })
+    window.dispatchEvent(new Event('resize'))
     /*
     const { div, span, h1, p, br, textarea, button } = van.tags
     const loadingViewer = new LoadingViewer()
