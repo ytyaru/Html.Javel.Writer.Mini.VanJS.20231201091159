@@ -69,9 +69,10 @@ class TsvParser {
         const datalist = ((column.datalist) ? JSON.parse(column.datalist) : null)
         attrs.id = `${column.sid.Chain}-${column.eid.Chain}`
         attrs.name = column.eid.Camel
-        attrs.placeholder = column.placeholder.replace('\\n', '\n')
-        if (!this.#isContenteditable(attrs) && !['select','file'].some(v=>v===column.type)) { attrs.value = column.value.replace('\\n', '\n') }
-        //if (!this.#isContenteditable(attrs) && !['file'].some(v=>v===column.type)) { attrs.value = column.value.replace('\\n', '\n') }
+        //attrs.placeholder = column.placeholder.replace('\\n', '\n')
+        attrs.placeholder = column.placeholder.replace(/\\n/g, '\n')
+        //if (!this.#isContenteditable(attrs) && !['select','file'].some(v=>v===column.type)) { attrs.value = column.value.replace('\\n', '\n') }
+        if (!this.#isContenteditable(attrs) && !['select','file'].some(v=>v===column.type)) { attrs.value = column.value.replace(/\\n/g, '\n') }
         if (datalist && ['hidden','password','check','checkbox','radio','button','submit','reset','image'].some(v=>v!==column.type)) { attrs.list = `${attrs.id}-list` }
         console.log(attrs.dataset)
         attrs['data-sid'] = column.sid.Chain
@@ -223,12 +224,14 @@ class SceneTransitioner {
         this._mode = {dir:0, loopMethod:0}
         this._seq = new MapSequence(this._map.get(), 0)
         this._fn = null
+        this._dispMap = new Map()
         console.log(this._map)
     }
     set onSelected(v) { console.log('***************************************************onSelected:', v, Type.isFunction(v));if (Type.isFunction(v)) { this._fn = v } }
     init(sid) { this.#addAll(sid) }
     #addAll(sid) {
         van.add(document.body, this._map.makeAll())
+        this.#initDisp()
         this.#hideAll()
         this.select(sid)
     }
@@ -247,10 +250,14 @@ class SceneTransitioner {
     }
     first() { this.select(this._seq.first()[1]) }
     last() { this.select(this._seq.last()[1]) }
+    //#initDisp() { for (let [sid,v] of this._map.get()) { this._dispMap.set(sid, Css.get('display',document.querySelector(`#${sid}`))) }
+    //#initDisp() { for (let [sid,v] of this._map.get()) { const d=Css.get('display',document.querySelector(`#${sid}`)); this._dispMap.set(sid, ((d) ? d : 'block')); }
+    #initDisp() { for (let [sid,v] of this._map.get()) { const d=Css.get('display',document.querySelector(`#${sid}`)); this._dispMap.set(sid, ((d) ? d : 'block')); } }
     #hideAll() { for (let [sid,v] of this._map.get()) { this.#hide(sid) } }
     #hide(sid) { this.#setDisp(sid, false) }
     #show(sid) { this.#setDisp(sid, true) }
-    #setDisp(sid, isShow) { const el=document.querySelector(`#${sid}`); if (el) {el.style.setProperty('display', ((isShow) ? 'block' : 'none'))} }
+    //#setDisp(sid, isShow) { const el=document.querySelector(`#${sid}`); if (el) {el.style.setProperty('display', ((isShow) ? 'block' : 'none'))} }
+    #setDisp(sid, isShow) { const el=document.querySelector(`#${sid}`); if (el) {el.style.setProperty('display', ((isShow) ? this._dispMap.get(sid) : 'none'))} }
 }
 class SceneStore { // 入力要素の値を取得・設定する
     constructor(sceneMap) { this._map = sceneMap.get() } // sceneMap: SceneMap instance

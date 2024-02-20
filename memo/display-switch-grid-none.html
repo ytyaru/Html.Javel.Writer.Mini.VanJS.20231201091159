@@ -1,0 +1,24 @@
+<script type="text/javascript" src="../docs/lib/van/1.2.6/nomodule.min.js"></script>
+<script>
+const {div,h1,p,br,textarea,button} = van.tags
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const display = van.state('grid')
+    const columns = van.state('1fr 1fr')
+    //const rows = van.state('1fr')
+    const rows = van.state(`${document.documentElement.clientHeight}px`)
+    console.log(rows.val)
+    van.add(document.body,
+        button({onclick:()=>{display.val=(('grid'===display.val) ? 'none' : 'grid');rows.val=`${document.documentElement.clientHeight}px`;}}, '表示ON/OFF'),
+        div({style:()=>`display:${display.val};grid;grid-template-columns:${columns.val};grid-template-rows:${rows.val};`},
+            div({style:()=>`display:${display.val};grid;grid-template-columns:1fr;grid-template-rows:1fr;`},
+                textarea({width:"100%",height:"100%"}),
+            ),
+            div({style:()=>`display:${display.val};grid;grid-template-columns:1fr;grid-template-rows:1fr;`},
+                textarea({width:"100%",height:"100%"}),
+            ),
+            //textarea(),
+            //textarea(),
+        ),
+    )
+})
+</script>

@@ -126,23 +126,11 @@ auth	back	button			戻る
     console.log('parser.manuscript:', parser.manuscript)
     scene.Map.setAttr('body', 'manuscript', 'oninput', (e)=>parser.manuscript=e.target.value)
     //scene.Map.setAttr('body', 'manuscript', 'oninput', (e)=>{console.log('oninput!!!!!!!:',e.target.value);parser.manuscript=e.target.value})
-//    scene.Map.setChildren('body', 'viewer', ()=>van.tags.div(parser.htmls))
+    scene.Map.setChildren('body', 'viewer', ()=>van.tags.div(parser.htmls))
 
     const body = new layout.Triple()
     scene.Map.setMake('body', (uiMap, sid)=>{
         body.el.id = sid
-        /*
-        //const doms = Array.from(uiMap).map(([k,v])=>scene.Tag.dom(v.col, v.obj))
-        //body.left.children = uiMap.get('manuscript')
-        body.right.children = uiMap.get('viewer')
-        body.center.children = [
-            uiMap.get('title'),
-            uiMap.get('counter'),
-            uiMap.get('writing-mode'),
-            uiMap.get('color-scheme'),
-            uiMap.get('download'),
-        ]
-        */
         let d = uiMap.get('manuscript'); let dom = scene.MakeHelper.tag(d.col, d.obj);
         body.left.children = [dom.el, dom.dl]
         //body.left.children = dom.el
@@ -160,10 +148,26 @@ auth	back	button			戻る
         body.center.children = buttons
         //body.center.children = van.tags.div(buttons)
         return body.el
+        /*
+        //const doms = Array.from(uiMap).map(([k,v])=>scene.Tag.dom(v.col, v.obj))
+        //body.left.children = uiMap.get('manuscript')
+        body.right.children = uiMap.get('viewer')
+        body.center.children = [
+            uiMap.get('title'),
+            uiMap.get('counter'),
+            uiMap.get('writing-mode'),
+            uiMap.get('color-scheme'),
+            uiMap.get('download'),
+        ]
+        */
     })
     //scene.Transitioner.onSelected = (sid)=>body.resize()
     //scene.Transitioner.onSelected = (sid)=>{console.log(body);body.resize()}
-    scene.Transitioner.onSelected = (sid)=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'))}
+    //scene.Transitioner.onSelected = (sid)=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'))}
+    //scene.Transitioner.onSelected = (sid)=>{setTimeout(()=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'))},100)}
+    //scene.Transitioner.onSelected = (sid)=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'));window.resizeTo(screen.width, screen.height)}
+    scene.Transitioner.onSelected = (sid)=>{setTimeout(()=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'));window.resizeTo(screen.width, screen.height)}, 3000)}
+
     van.add(document.body, 
         van.tags.button({onclick:()=>scene.Transitioner.move()},'画面遷移')
     )

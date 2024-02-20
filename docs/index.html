@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         '44',
         '画面をTsv,SceneMapで仮作成してみた',
         'パース機能だけ実装した',
-        '予定：scene(selectのoption無しでもエラーにならず、inner→children変更) layout(画面遷移して一周すると配置崩れる)',
+        '予定：scene(selectのoption無しでもエラーにならず、inner→children変更。SceneTransitioner.#initDisp()追加) layout(画面遷移して一周すると配置崩れる（display:block;になるのが原因。SceneTransitioner.#initDisp()追加してdisplayの初期値を設定するよう修正し解決した）)',
         /*
         パフォーマンス改善予定（全テキストブロック生成のジェネレータ化）
         パフォーマンス改善予定（全テキストブロック生成のジェネレータ中Loading表示と切替）
