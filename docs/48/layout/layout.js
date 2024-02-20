@@ -6,24 +6,33 @@ class SingleScreen {
         this._w = van.state('100%')
         this._h = van.state('100%')
         this._writingMode = van.state('horizontal-tb') // vertical-rl
+        this._gridTemplateColumns = van.state('1fr')
+        this._gridTemplateRows = van.state('1fr')
         this._overflowX = van.state('auto')
         this._overflowY = van.state('auto')
         this._textOrient = van.state('mixed') // upright
         this._border = van.state('solid 1px #000')
         this._wordBreak = van.state('normal')
-        this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;overflow-y:scroll;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:1fr;grid-template-rows:1fr;`}, this.children))
+        this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;overflow-y:scroll;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:${this._gridTemplateColumns.val};grid-template-rows:${this._gridTemplateRows.val};`}, this.children))
+        //this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;overflow-y:scroll;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:1fr;grid-template-rows:1fr;`}, this.children))
     }
     get el() { return this._div }
     get children( ) { return this._children.val }
     set children(v) { this._children.val = v}
     get isVertical() { return !this.isHorizontal }
     get isHorizontal() { return ('horizontal-tb'===this._writingMode.val) }
-    set isVertical(v) { if(v) { this._writingMode = 'vertical-rl' }  }
-    set isHorizontal(v) { if(v) { this._writingMode = 'horizontal-tb' }  }
+    set isVertical(v) { this._writingMode.val = ((v) ? 'vertical-rl' : 'horizontal-tb') }
+    set isHorizontal(v) { this._writingMode.val = ((v) ? 'horizontal-tb' : 'vertical-rl') }
+//    set isVertical(v) { if(v) { this._writingMode = 'vertical-rl' }  }
+//    set isHorizontal(v) { if(v) { this._writingMode = 'horizontal-tb' }  }
     toggleWritingMode() {
         this._writingMode.val = (('horizontal-tb'===this._writingMode.val) ? 'vertical-rl' : 'horizontal-tb')
         this.#setOverflow()
     }
+    get gridTemplateColumns( ) { return this._gridTemplateColumns.val }
+    set gridTemplateColumns(v) { this._gridTemplateColumns.val = v }
+    get gridTemplateRows( ) { return this._gridTemplateRows.val }
+    set gridTemplateRows(v) { this._gridTemplateRows.val = v }
     #setOverflow() {
         if ('horizontal-tb'===this._writingMode.val) {
             this._overflowX.val = 'hidden'
@@ -102,6 +111,11 @@ class TripleScreen {
         this._gridTemplateRows.val = ((this.#isLandscape) ? shortEdgeGrid : longEdgeGrid)
         console.log(this._gridTemplateColumns.val)
         console.log(this._gridTemplateRows.val)
+        this.center.isVertical = this.#isLandscape
+        this.center.gridTemplateRows = `${centerSize}px`
+        //this.center.gridTemplateRows = `${this.#height}px`
+        console.error('this.center.isVertical:', this.center.isVertical, this.center._writingMode.val, this.center.gridTemplateColumns)
+        console.error(this.#isLandscape, this.#width, this.#height)
 //        this._left.children = [p('isLandscape:', this.#isLandscape), p('body.client:', document.body.clientWidth, ',', document.body.clientHeight), p('documentElement.client:', document.documentElement.clientWidth, ',', document.documentElement.clientHeight), p('window.inner:', window.innerWidth, ',', window.innerHeight), p('long,short:', this.#longEdgeSize, ',', this.#longEdgeSize), p('gridTemplateColumns:', this._gridTemplateColumns.val), p('gridTemplateRows:', this._gridTemplateRows.val)]
     }
     get #longEdgeSize() { return Math.max(this.#width, this.#height) }

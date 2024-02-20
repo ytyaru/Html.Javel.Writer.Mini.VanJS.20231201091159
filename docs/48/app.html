@@ -71,6 +71,7 @@ a:active { color: #ff8000; }
 <script type="text/javascript" src="util/string/length.js"></script>
 <script type="text/javascript" src="util/string/trim.js"></script>
 <script type="text/javascript" src="util/string/insert.js"></script>
+<script type="text/javascript" src="util/string/case.js"></script>
 <script type="text/javascript" src="util/css.js"></script>
 <script type="text/javascript" src="scene/sequence.js"></script>
 <script type="text/javascript" src="scene/scenes.js"></script>
@@ -167,9 +168,20 @@ auth	back	button			戻る
         body.left.children = [dom.el, dom.dl]
         dom = uiMap.get('viewer').dom;
         body.right.children = [dom.el, dom.dl]
-        body.center.children = ['title','counter','writing-mode','color-scheme','download'].map(eid=>uiMap.get(eid).dom.el)
+
+        const buttons = ['title','counter','writing-mode','color-scheme','download'].map(eid=>uiMap.get(eid).dom.el)
+        body.center.children = buttons
+        body.center.gridTemplateColumns = `repeat(${buttons.length}, 1fr)`
+//        body.center.gridTemplateRows = `repeat(${buttons.length}, 1fr)`
+        /*
+        const buttons = ['title','counter','writing-mode','color-scheme','download'].map(eid=>uiMap.get(eid).dom.el)
+        body.center.children = van.tags.div({style:()=>`display:grid;grid-template-columns:repeat(${buttons.length}, 1fr);grid-template-rows:1fr;`}, buttons)
+        body.center.gridTemplateColumns = `repeat(${buttons.length}, 1fr)`
+        body.center.gridTemplateRows = `repeat(${buttons.length}, 1fr)`
+        */
         return body.el
     })
+
     scene.Transitioner.onSelected = (sid)=>{setTimeout(()=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'));window.resizeTo(screen.width, screen.height)}, 3000)}
     scene.addBody()
     window.addEventListener('resize', async(event) => {
