@@ -136,6 +136,7 @@ auth	back	button			戻る
     scene.Map.setAttr('head', 'back', 'onclick', (e)=>scene.Transitioner.select('body'))
     scene.Map.setAttr('auth', 'back', 'onclick', (e)=>scene.Transitioner.select('head'))
 
+    scene.Map.setAttr('body', 'writing-mode', 'onclick', (e)=>body.right.toggleWritingMode())
     scene.Map.setAttr('body', 'download', 'onclick', (e)=>TextFile.download('+++\n' + cover.yaml + '+++\n\n' + parser.manuscript, cover.title+'.ja'))
 
     scene.Map.setAttr('body', 'counter', 'onclick', (e)=>console.log('詳細ダイアログ？'))
