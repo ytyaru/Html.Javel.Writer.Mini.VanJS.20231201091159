@@ -59,6 +59,7 @@ window.addEventListener('DOMContentLoaded', async(event) => {
         'パース機能だけ実装した',
         'アプリ用ライブラリで再構成した。scene(selectのoption無しでもエラーにならず、inner→children変更。SceneTransitioner.#initDisp()追加) layout(画面遷移して一周すると配置崩れる（display:block;になるのが原因。SceneTransitioner.#initDisp()追加してdisplayの初期値を設定するよう修正し解決した）)',
         '一部機能を実装した（ボタンによる画面遷移。簡易文字数カウント。ビューア書字方向変更。簡易ファイルDL）。util/string/case.jsをインポートした。ボタンレイアウトが微妙。',
+        '予定：layout(ボタン配置)',
         /*
         パフォーマンス改善予定（全テキストブロック生成のジェネレータ化）
         パフォーマンス改善予定（全テキストブロック生成のジェネレータ中Loading表示と切替）

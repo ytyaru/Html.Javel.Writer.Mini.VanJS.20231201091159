@@ -1,0 +1,190 @@
+<style>
+:root {
+    --font-size:max(16px, calc(100vw / 42));
+    --em-style:filled sesame;
+    --em-color:#fff;
+    --color:#fff;
+    --a-color:#ff0;
+    --background-color:#000;
+    --selection-color:#000;
+    --selection-background-color:#aa0;
+    --a-selection-color:#ee0;
+    --a-selection-background-color:#00f;
+    --caret-color: auto;
+    --outline-color:#fff;
+    --outline-style:solid;
+    --outline-width:2px;
+    --button-focus-color:#000;
+    --button-focus-background-color:#aa0;
+}
+body {
+    overflow-x:hidden;
+    overflow-y:hidden;
+    padding:0;margin:0;
+    width:100%;
+    height:100%;
+}
+*:focus {
+    outline-color: var(--outline-color);
+    outline-style: var(--outline-style);
+    outline-width: var(--outline-width);
+}
+button:focus {
+    color: var(--button-focus-color);
+    background-color: var(--button-focus-background-color);
+}
+body, textarea, button {
+    font-family: 'Noto Serif JP', 'Source Han Serif JP', 'Noto Color Emoji', serif; 
+    font-size: var(--font-size);
+    line-height: 1.7em;
+    letter-spacing: 0.05em;
+    color: var(--color);
+    background-color: var(--background-color);
+    caret-color: var(--caret-color);
+}
+::selection {
+    color: var(--selection-color);
+    background-color: var(--selection-background-color);
+    text-shadow: none;
+}
+a::selection {
+    color: var(--a-selection-color);
+    background-color: var(--a-selection-background-color);
+    text-shadow: none;
+}
+button { user-select:none; font-size:var(--font-size); padding:0; margin:0; line-height:1em; letter-spacing:0; word-break:break-word; }
+h1 { font-family: 'Noto Sans JP', 'Source Han Sans JP', 'Noto Color Emoji', sans-serif; }
+em {
+    font-style: normal; /* 非イタリック化 */
+    text-emphasis: var(--em-style) var(--em-color);
+    -webkit-text-emphasis: var(--em-style) var(--em-color);
+}
+a:link, a:visited, a:hover, a:active { color: var(--a-color); }
+/*
+a:link { color: #0000ff; }
+a:visited { color: #000080; }
+a:hover { color: #ff0000; }
+a:active { color: #ff8000; }
+*/
+</style>
+<script type="text/javascript" src="util/type.js"></script>
+<script type="text/javascript" src="util/string/length.js"></script>
+<script type="text/javascript" src="util/string/trim.js"></script>
+<script type="text/javascript" src="util/string/insert.js"></script>
+<script type="text/javascript" src="util/string/case.js"></script>
+<script type="text/javascript" src="util/css.js"></script>
+<script type="text/javascript" src="scene/sequence.js"></script>
+<script type="text/javascript" src="scene/scenes.js"></script>
+<script type="text/javascript" src="scene/file.js"></script>
+<script type="text/javascript" src="../lib/van/1.2.6/nomodule.min.js"></script>
+<script type="text/javascript" src="../lib/js-yaml/4.1.0/min.js"></script>
+<script type="text/javascript" src="layout/layout.js"></script>
+<script type="text/javascript" src="ui/van-button.js"></script>
+<!--
+<script type="text/javascript" src="loading-viewer.js"></script>
+<script type="text/javascript" src="text-block.js"></script>
+<script type="text/javascript" src="javel-parser.js"></script>
+<script type="text/javascript" src="focus-looper.js"></script>
+<script type="text/javascript" src="html-viewer.js"></script>
+<script type="text/javascript" src="javel-syntax-error.js"></script>
+<script type="text/javascript" src="error-viewer.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript" src="drop-item.js"></script>
+<script type="text/javascript" src="text-input.js"></script>
+<script type="text/javascript" src="app-style.js"></script>
+<script type="text/javascript" src="color-scheme.js"></script>
+<script type="text/javascript" src="html-word-counter.js"></script>
+-->
+<script type="text/javascript" src="parser/javel-parser.js"></script>
+<script type="text/javascript" src="parser/author.js"></script>
+<script type="text/javascript" src="parser/cover.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', async(event) => {
+    const scene = new Scene()
+    const tsv = scene.Tsv.header.get() + `
+body	manuscript	textarea	原稿	# 原稿《げんこう》\\n\\n　本文。			{"resize":"none"}
+body	viewer	div	ビューア				{"tabindex":0, "contenteditable":true,"width":"100%","height":"100%"}
+body	title	button	題				
+body	counter	button	字				
+body	writing-mode	button	横		横		
+body	color-scheme	button	白		白		
+body	download	button	出		出		
+head	title	text	タイトル	指輪物語《ロード・オブ・ザ・リング》			
+head	catch	text	ｷｬｯﾁｺﾋﾟｰ	世界最高のファンタジー			
+head	intro	textarea	紹介文	指輪をめぐり世界の命運をかけた戦いがはじまる。			
+head	category	select	カテゴリ		light-novel	{"literature":"文学", "general-literature":"一般文芸", "light-literature":"ライト文芸", "light-novel":"ライトノベル", "children-literature":"児童文学", "erotic":"官能小説"}	
+head	genre	select	ジャンル		fantasy	{"fantasy":"ファンタジー", "sf":"SF", "mystery":"ミステリー", "horror":"ホラー", "love":"恋愛", "youth":"青春", "history":"歴史", "economy":"経済", "politics":"政治"}	
+head	author	select	著者				
+head	make-author	button			＋		
+head	back	button			戻る		
+auth	name	text	名前	山田《やまだ》太郎《たろう》			
+auth	code	text	コード	yamada-taro			
+auth	mastodon-domain	text	Mastodonドメイン	mstdn.jp			
+auth	mastodon-username	text	Mastodonユーザ名	yamada			
+auth	misskey-domain	text	Misskeyドメイン	nijimiss.moe			
+auth	misskey-username	text	Misskeyユーザ名	yamada			
+auth	mona-coin-address	text	MONA	xxxxxxxx			
+auth	back	button			戻る		
+`
+    scene.init(tsv)
+    console.log('Map:',scene.Map)
+    const parser = new JavelParser()
+    const cover = new Cover()
+    console.log('parser.manuscript:', parser.manuscript)
+    scene.Map.setAttr('body', 'manuscript', 'oninput', (e)=>parser.manuscript=e.target.value)
+    scene.Map.setChildren('body', 'viewer', (e)=>van.tags.div(parser.htmls))
+    scene.Map.setAttr('body', 'title', 'onclick', (e)=>scene.Transitioner.select('head'))
+    scene.Map.setAttr('head', 'make-author', 'onclick', (e)=>scene.Transitioner.select('auth'))
+    scene.Map.setAttr('head', 'back', 'onclick', (e)=>scene.Transitioner.select('body'))
+    scene.Map.setAttr('auth', 'back', 'onclick', (e)=>scene.Transitioner.select('head'))
+
+    scene.Map.setAttr('body', 'writing-mode', 'onclick', (e)=>body.right.toggleWritingMode())
+    scene.Map.setAttr('body', 'download', 'onclick', (e)=>TextFile.download('+++\n' + cover.yaml + '+++\n\n' + parser.manuscript, cover.title+'.ja'))
+
+    scene.Map.setAttr('body', 'counter', 'onclick', (e)=>console.log('詳細ダイアログ？'))
+    scene.Map.setChildren('body', 'counter', (e)=>`${parser.count}字`)
+    scene.Map.setChildren('body', 'title', (e)=>`${cover.title}`)
+    scene.Map.setChildren('body', 'title', (e)=>parser.parseLine(cover.title))
+
+    scene.Map.setAttr('head', 'title', 'oninput', (e)=>cover.title=e.target.value)
+    scene.Map.setAttr('head', 'catch', 'oninput', (e)=>cover.catch=e.target.value)
+    scene.Map.setAttr('head', 'intro', 'oninput', (e)=>cover.intro=e.target.value)
+    scene.Map.setAttr('head', 'category', 'oninput', (e)=>cover.category=e.target.value)
+    scene.Map.setAttr('head', 'genre', 'oninput', (e)=>cover.genre=e.target.value)
+    scene.Map.setAttr('head', 'author', 'oninput', (e)=>parser.parseLine(cover.author.name)=e.target.value)
+    scene.Map.setChildren('head', 'author', (e)=>van.tags.option(parser.parseLine(cover.author.name)))
+
+//parser.parseLine(cover.catch)
+//parser.parse(cover.intro)
+//parser.parseLine(cover.author.name)
+
+    scene.Map.setAttr('auth', 'name', 'oninput', (e)=>cover.author.name=e.target.value)
+    scene.Map.setAttr('auth', 'code', 'oninput', (e)=>cover.author.code=e.target.value)
+
+    console.log('*****************:')
+    const body = new layout.Triple()
+    scene.Map.setMake('body', (uiMap, sid)=>{
+        body.el.id = sid
+        let dom = uiMap.get('manuscript').dom;
+        body.left.children = [dom.el, dom.dl]
+        dom = uiMap.get('viewer').dom;
+        body.right.children = [dom.el, dom.dl]
+
+        //const buttons = ['title','counter','writing-mode','color-scheme','download'].map(eid=>uiMap.get(eid).dom.el)
+        const buttons = ['title','counter','writing-mode','color-scheme','download'].map(eid=>VanButton.make(uiMap.get(eid).col.value))
+        body.center.children = buttons
+        body.center.gridTemplateColumns = `repeat(${buttons.length}, 1fr)`
+        //body.center.gridTemplateRows = `${((body.center.isHorizontal) ? document.documentElement.clientHeight : document.body.clientWidth)}px`
+        return body.el
+
+    })
+
+    scene.Transitioner.onSelected = (sid)=>{setTimeout(()=>{console.log(body);body.resize();window.dispatchEvent(new Event('resize'));window.resizeTo(screen.width, screen.height)}, 3000)}
+    scene.addBody()
+    window.addEventListener('resize', async(event) => {
+        console.log('RESIZEEEEEEEEEEEEEEe')
+        body.resize()
+    })
+    window.dispatchEvent(new Event('resize'))
+})
+</script>
