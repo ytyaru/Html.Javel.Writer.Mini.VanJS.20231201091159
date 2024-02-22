@@ -5,7 +5,15 @@ class Font {
     get LetterSpcing() { return (this.MIN*this.LetterSpcingEm) }
     get LineHeightEm() { return 1.7 }
     get size() { return this.calc(ClientArea.inlineSize) }
-    calc(param) { return ((Type.isEl(param) ? this.#calcFromEl(param) : this.#calcFromInlineSize(param))) }
+    //calc(param) { return ((Type.isEl(param) ? this.#calcFromEl(param) : this.#calcFromInlineSize(param))) }
+    calc(param) {
+        console.log(param, Type.isEl(param), Type.isNumber(param))
+        if (Type.isEl(param)) { return this.#calcFromEl(param) }
+        else if (Type.isNumber(param)) { return this.#calcFromInlineSize(param) }
+        //else { throw new Error(`Font.calc()の引数は要素か数値のみ有効です。:${typeof param}`) }
+        else { console.error(`Font.calc()の引数は要素か数値のみ有効です。:${typeof param}, ${param}`) }
+//        return ((Type.isEl(param) ? this.#calcFromEl(param) : this.#calcFromInlineSize(param)))
+    }
     #calcFromEl(el) { return this.calc((el || document.body).Size.contentBox.inlineSize) }
     #calcFromInlineSize(inlineSize) {
         inlineSize = inlineSize || ClientArea.inlineSize

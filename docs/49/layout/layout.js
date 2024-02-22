@@ -13,21 +13,21 @@ class SingleScreen {
         this._textOrient = van.state('mixed') // upright
         this._border = van.state('solid 1px #000')
         this._wordBreak = van.state('normal')
-        this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;overflow-y:scroll;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:${this._gridTemplateColumns.val};grid-template-rows:${this._gridTemplateRows.val};`}, this.children))
+        this._fontSize = van.state(16)
+        this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;font-size:${this._fontSize.val}px;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:${this._gridTemplateColumns.val};grid-template-rows:${this._gridTemplateRows.val};`}, this.children))
         //this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;overflow-y:scroll;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:1fr;grid-template-rows:1fr;`}, this.children))
     }
     get el() { return this._div }
     get children( ) { return this._children.val }
-    set children(v) { this._children.val = v}
+    set children(v) { this._children.val = v; this.resize(); }
     get isVertical() { return !this.isHorizontal }
     get isHorizontal() { return ('horizontal-tb'===this._writingMode.val) }
-    set isVertical(v) { this._writingMode.val = ((v) ? 'vertical-rl' : 'horizontal-tb') }
-    set isHorizontal(v) { this._writingMode.val = ((v) ? 'horizontal-tb' : 'vertical-rl') }
-//    set isVertical(v) { if(v) { this._writingMode = 'vertical-rl' }  }
-//    set isHorizontal(v) { if(v) { this._writingMode = 'horizontal-tb' }  }
+    set isVertical(v) { this._writingMode.val = ((v) ? 'vertical-rl' : 'horizontal-tb'); this.resize(); }
+    set isHorizontal(v) { this._writingMode.val = ((v) ? 'horizontal-tb' : 'vertical-rl'); this.resize(); }
     toggleWritingMode() {
         this._writingMode.val = (('horizontal-tb'===this._writingMode.val) ? 'vertical-rl' : 'horizontal-tb')
         this.#setOverflow()
+        this.resize()
     }
     get gridTemplateColumns( ) { return this._gridTemplateColumns.val }
     set gridTemplateColumns(v) { this._gridTemplateColumns.val = v }
@@ -43,6 +43,7 @@ class SingleScreen {
             this._overflowY.val = 'hidden'
             this._textOrient.val = 'upright'
         }
+        this.#setFontSize()
     }
     set wordBreak(val) { if (['normal','break-all','keep-all','break-word'].some(v=>v===val)) { this._wordBreak.val = val } }
     get hasScrollBar() { return ((this.el.isHorizontal) ? this.el.scrollHeight > this.el.this.height : this.el.scrollWidth > this.el.this.width) }
@@ -52,6 +53,23 @@ class SingleScreen {
             if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
             this._div.scrollLeft += e.deltaY;
             e.preventDefault();
+        }
+    }
+    resize() { this.#setFontSize() }
+    #setFontSize() { console.log('this.el:',this.el);this._fontSize.val = Font.calc(this.el); this.#setFontSizeElements(); }
+    #setFontSizeElements() {
+        console.log('#setFontSizeElements()')
+        //for (let el of this.el.querySelectorAll('textarea,select,input,button,label,legend')) {
+        for (let el of this.el.querySelectorAll('*[data-sid][data-eid]')) {
+            const tagName = el.tagName.toLowerCase()
+            if (!'div,textarea,select,input,button,label,legend'.split(',').some(v=>v===tagName)) { continue }
+            console.error(tagName)
+            Css.set('font-size', `${this._fontSize.val}px`, el)
+            console.log(el, this._fontSize.val)
+            if ('textarea'===tagName || ('div'===tagName)) {
+                Css.set('line-height', '1.7em', el)
+                Css.set('letter-spacing', '0.05em', el)
+            }
         }
     }
 }
@@ -160,6 +178,9 @@ class TripleScreen {
     resize() {
         this.#setGridTemplate()
         this._center.wordBreak = ((this.#isLandscape) ? 'break-all' : 'normal')
+        this.left.resize()
+        this.right.resize()
+        this.center.resize()
     }
     #setGridTemplate() {
         const screenSize = Math.floor(this.#longEdgeSize * 0.48)
