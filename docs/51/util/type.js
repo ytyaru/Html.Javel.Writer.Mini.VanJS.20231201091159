@@ -95,7 +95,6 @@ class Type {
     isNums(v) { return Array.isArray(v) && v.every(x=>this.isNumber(x)) }
     isInts(v) { return Array.isArray(v) && v.every(x=>this.isInteger(x)) }
     isBools(v) { return Array.isArray(v) && v.every(x=>this.isBoolean(x)) }
-    //isEls(v) { return Array.isArray(v) && v.every(x=>Type.Element(x)) }
     isEls(v) { return Array.isArray(v) && v.every(x=>this.isElement(x)) }
     isArys(v) { return Array.isArray(v) && v.every(x=>this.isArray(x)) }
     isObjs(v) { return Array.isArray(v) && v.every(x=>this.isObject(x)) }
@@ -107,7 +106,6 @@ class Type {
     isFs(v) { return Array.isArray(v) && v.every(x=>this.isFloat(x)) }
     isDs(v) { return Array.isArray(v) && v.every(x=>this.isDate(x)) }
     isBs(v) { return Array.isArray(v) && v.every(x=>this.isBoolean(x)) }
-    //isEs(v) { return Array.isArray(v) && v.every(x=>Type.Element(x)) }
     isEs(v) { return Array.isArray(v) && v.every(x=>this.isElement(x)) }
     isAs(v) { return Array.isArray(v) && v.every(x=>this.isArray(x)) }
     isOs(v) { return Array.isArray(v) && v.every(x=>this.isObject(x)) }

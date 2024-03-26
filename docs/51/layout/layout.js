@@ -14,7 +14,8 @@ class SingleScreen {
         this._border = van.state('solid 1px #000')
         this._wordBreak = van.state('normal')
         this._fontSize = van.state(16)
-        this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;font-size:${this._fontSize.val}px;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:${this._gridTemplateColumns.val};grid-template-rows:${this._gridTemplateRows.val};`}, this.children))
+        //this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;font-size:${this._fontSize.val}px;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:${this._gridTemplateColumns.val};grid-template-rows:${this._gridTemplateRows.val};`}, this.children))
+        this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;font-size:${this._fontSize.val}px;display:grid;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`padding:0;margin:0;font-size:${this._fontSize.val}px;display:grid;display:grid;grid-template-columns:${this._gridTemplateColumns.val};grid-template-rows:${this._gridTemplateRows.val};box-sizing:border-box;`}, this.children))
         //this._div = van.tags.div({onwheel:(e)=>this.#onWheel(e), style:()=>`padding:0;margin:0;overflow-y:scroll;display:grid;grid-template-columns:1fr;grid-template-rows:1fr;box-sizing:border-box;border:${this._border.val};writing-mode:${this._writingMode.val};overflow-x:${this._overflowX.val};overflow-y:${this._overflowY.val};text-orientation:${this._textOrient.val};word-break:${this._wordBreak.val};`}, ()=>div({style:`display:grid;grid-template-columns:1fr;grid-template-rows:1fr;`}, this.children))
     }
     get el() { return this._div }
@@ -193,6 +194,9 @@ class TripleScreen {
         console.log(this._gridTemplateRows.val)
         this.center.isVertical = this.#isLandscape
         this.center.gridTemplateRows = `${centerSize}px`
+        console.log(this.center.gridTemplateColumns)
+        console.log(this.center.gridTemplateRows)
+        console.log(this.center.children[0], this.center.children[0].width, this.center.children[0].height)
         //this.center.gridTemplateRows = `${centerSize}px`
         //this.center.gridTemplateRows = `${this.#height}px`
         //console.error('this.center.isVertical:', this.center.isVertical, this.center._writingMode.val, this.center.gridTemplateColumns)
