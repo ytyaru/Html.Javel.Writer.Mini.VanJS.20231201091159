@@ -193,6 +193,9 @@ auth	back	van-button			戻る
         body.center.gridTemplateColumns = `repeat(${buttons.length}, 1fr)`
         //body.center.gridTemplateRows = `${((body.center.isHorizontal) ? document.documentElement.clientHeight : document.body.clientWidth)}px`
         console.log(body.center.gridTemplateRows, buttons[0].width, buttons[0].height)
+        console.log(body.center.style)
+//        console.log(body.center.style.overflowX)
+//        body.center.style.overflowX = 'none'
         return body.el
 
     })
